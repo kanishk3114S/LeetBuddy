@@ -1,30 +1,42 @@
-    # Dependencies
-    **/node_modules/
+# Dependencies
+node_modules/
+**/node_modules/
 
-    # Build output
-    **/dist/
-    **/build/
-    **/.vite/
-    **/coverage/
+# Environment files and secrets
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+**/.env
+**/.env.*
+!**/.env.example
+!.env.example
 
-    # Environment files and secrets
-    **/.env
-    **/.env.*
-    !**/.env.example
+# Build output
+dist/
+build/
+.vite/
+coverage/
+**/dist/
+**/build/
+**/.vite/
+**/coverage/
 
-    # Logs
-    *.log
-    npm-debug.log*
-    yarn-debug.log*
-    pnpm-debug.log*
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
 
-    # Editor and operating-system files
-    .vscode/*
-    !.vscode/extensions.json
-    .idea/
-    .DS_Store
-    Thumbs.db
+# Editor and operating-system files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
 
-    # Local tool state
-    .eslintcache
-    *.tsbuildinfo
+# Local tool state
+.eslintcache
+*.tsbuildinfo
