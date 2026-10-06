@@ -132,27 +132,35 @@ export async function login(req,res) {
 
 }
 
-export async function getMe(req , res) { //when user hit this end point of backend then the token has been verified
-    
-    const token = req.headers.authorization?.split(" ")[ 1 ];
+export async function getMe(req , res) {
+    try {
+        // req.user is set by verifyAccessToken middleware
+        const userId = req.user?.id || (req.headers.authorization?.split(" ")[1] ? jwt.verify(req.headers.authorization.split(" ")[1], config.JWT_SECRET)?.id : null);
 
-    if (!token) {
+        if (!userId) {
+            return res.status(401).json({
+                message: "token not provided/found"
+            });
+        }
 
+        const user = await userModel.findById(userId).select("-password");
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        return res.status(200).json({
+            message: "User fetched successfully",
+            user: user
+        });
+    } catch (error) {
         return res.status(401).json({
-            message : "token not provided/found"
-        })
-
+            message: "Invalid or expired token",
+            error: error.message
+        });
     }
-
-    const decoded = jwt.verify(token , config.JWT_SECRET); //DECODED WILL EXTRACT ALL THE DATA provided in the token//
-
-    const user = await userModel.findById(decoded.id).select("-password");
-
-    res.status(200).json({
-        message: "User fetched successfully",
-        user: user
-    })
-
 }
 
 //lets create a auth function to create and send back the refresh token//
@@ -167,53 +175,58 @@ export async function refreshtoken(req,res) {
         })
     }
 
-    const decodedInfo = jwt.verify(refreshToken , config.JWT_SECRET)
+    try {
+        const decodedInfo = jwt.verify(refreshToken , config.JWT_SECRET)
 
-    const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex")
+        const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex")
 
-    const session = await sessionModel.findOne({
-        user: decodedInfo.id,
-        refreshTokenHash,
-        revoked: false
-    })
+        const session = await sessionModel.findOne({
+            user: decodedInfo.id,
+            refreshTokenHash,
+            revoked: false
+        })
 
-    if (!session) {
-       return res.status(401).json({
-            message : "the session has not been found"
+        if (!session) {
+           return res.status(401).json({
+                message : "the session has not been found"
+            })
+        }
+        
+        const newAccessToken = jwt.sign({
+            id: decodedInfo.id,
+            sessionId: session._id
+        },config.JWT_SECRET,{
+            expiresIn: "15m"
+        })
+        
+        const newRefreshToken = jwt.sign({
+            id: decodedInfo.id
+        },config.JWT_SECRET,{
+            expiresIn: "7d"
+        })
+
+        const newRefreshTokenHash = crypto.createHash("sha256").update(newRefreshToken).digest("hex")
+
+        session.refreshTokenHash = newRefreshTokenHash
+        await session.save();
+        
+        res.cookie("refreshToken" , newRefreshToken, {
+            httpOnly: true,
+            secure: false,
+            sameSite: "strict",
+            maxAge: 7*24*60*60*1000
+        })
+
+        return res.status(200).json({
+            message: "New access token generated",
+            token : newAccessToken
+        })
+    } catch (error) {
+        return res.status(401).json({
+            message: "Invalid or expired refresh token",
+            error: error.message
         })
     }
-    
-    const newAccessToken = jwt.sign({
-        id: decodedInfo.id,
-        sessionId: session._id
-    },config.JWT_SECRET,{
-        expiresIn: "15m"
-    })
-    
-    const newRefreshToken = jwt.sign({
-        id: decodedInfo.id
-    },config.JWT_SECRET,{
-        expiresIn: "7d"
-    })
-
-    //after creating the new refresh token add that into cookie + add the hash into the 
-
-    const newRefreshTokenHash = crypto.createHash("sha256").update(newRefreshToken).digest("hex")
-
-    session.refreshTokenHash = newRefreshTokenHash
-    await session.save();
-    
-    res.cookie("refreshToken" , newRefreshToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "strict",
-        maxAge: 7*24*60*60*1000 //7 days tak yeh cookie browser mein rahegi jisko tum Js ke through access nahi kar sakte ho.....//
-    })
-
-    return res.status(200).json({
-        message: "New access token generated",
-        token : newAccessToken
-    })
 
 }
 
@@ -228,10 +241,9 @@ export async function logout(req,res) {
         })
     }
 
-    
     const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex")
 
-    const session = await sessionModel.findOne({ //means find the session from the models which has the following properties//
+    const session = await sessionModel.findOne({
         refreshTokenHash,
         revoked: false
     })
@@ -244,7 +256,7 @@ export async function logout(req,res) {
 
     session.revoked = true;
 
-    await session.save(); //save in the database but since the database is in
+    await session.save();
 
     res.clearCookie("refreshToken", {
         httpOnly: true,
@@ -267,19 +279,26 @@ export async function logoutAll(req , res) {
         })
     }
 
-    const decoded = jwt.verify(refreshToken , config.JWT_SECRET)
+    try {
+        const decoded = jwt.verify(refreshToken , config.JWT_SECRET)
 
-    await sessionModel.updateMany({
-        user: decoded.id,
-        revoked: false,
-    } , {
-        revoked : true,
-    })
+        await sessionModel.updateMany({
+            user: decoded.id,
+            revoked: false,
+        } , {
+            revoked : true,
+        })
 
-    res.clearCookie("refreshToken")
+        res.clearCookie("refreshToken")
 
-    return res.status(200).json({
-        message : "Logged out from all the devices"
-    })
+        return res.status(200).json({
+            message : "Logged out from all the devices"
+        })
+    } catch (error) {
+        return res.status(401).json({
+            message: "Invalid or expired refresh token",
+            error: error.message
+        })
+    }
 
 }
