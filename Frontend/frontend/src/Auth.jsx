@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import ThemeToggle from './components/ThemeToggle.jsx'
+import { useNavigate } from 'react-router-dom'
+import ThemeToggle from './components_dashboard/ThemeToggle.jsx'
 import { useTheme } from './hooks/useTheme.js'
 
 const Brand = () => (
@@ -18,9 +19,16 @@ function Auth() {
   const [showPassword, setShowPassword] = useState(false)
   const [form, setForm] = useState({ username: '', email: '', password: '' })
   const { isDarkMode } = useTheme()
+  const navigate = useNavigate()
 
   const updateField = (event) => setForm({ ...form, [event.target.name]: event.target.value })
-  const submit = (event) => event.preventDefault()
+
+  const submit = (event) => {
+    event.preventDefault()
+    localStorage.setItem('lb_email', form.email)
+    if (form.username) localStorage.setItem('lb_name', form.username)
+    navigate('/dashboard')
+  }
 
   const inputClass =
     "mt-2 w-full rounded-[5px] border px-3.5 py-3 text-[13px] outline-none transition " +

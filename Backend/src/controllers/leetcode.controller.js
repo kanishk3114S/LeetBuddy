@@ -61,9 +61,17 @@ export const generateVerificationToken = async (req, res) => {
             return res.status(400).json({ error: "LeetCode username is required" });
         }
 
-        // Generate a random 12-character hex string and append prefix
-        const rawToken = crypto.randomBytes(6).toString("hex");
-        const verificationToken = `LeetBuddy-${rawToken}`;
+        // Use a strictly alphanumeric set (no symbols, no pure hex patterns that trigger filters)
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+        // Generate a clean 12-character alphanumeric token
+        let rawToken = "";
+        const randomBytes = crypto.randomBytes(12);
+        for (let i = 0; i < 12; i++) {
+            rawToken += chars[randomBytes[i] % chars.length];
+        }
+
+        const verificationToken = rawToken;
 
         // Update user document with the new token and unverified status
         await userModel.findByIdAndUpdate(
@@ -134,28 +142,54 @@ export const verifyLeetCode = async (req, res) => {
             }
         });
 
-        // 5. FETCH STATS, CALENDAR, TOPICS & BADGES (No submission queries)
+        // 5. FETCH STATS, CALENDAR, TOPICS & BADGES (Accurate, comprehensive data without submission list spam)
         const statsQuery = `
             query getUserFullStats($username: String!) {
+                allQuestionsCount {
+                    difficulty
+                    count
+                }
                 matchedUser(username: $username) {
-                    submitStats {
+                    profile {
+                        ranking
+                        userAvatar
+                        realName
+                        aboutMe
+                    }
+                    problemsSolvedBeatsStats {
+                        difficulty
+                        percentage
+                    }
+                    submitStatsGlobal {
                         acSubmissionNum { difficulty count submissions }
                         totalSubmissionNum { difficulty count submissions }
                     }
                     userCalendar {
+                        activeYears
                         streak
                         totalActiveDays
                         submissionCalendar
+                    }
+                    activeBadge {
+                        id
+                        name
+                        displayName
+                        icon
+                    }
+                    badges {
+                        id
+                        name
+                        shortName
+                        displayName
+                        icon
+                        hoverText
+                        creationDate
+                        category
                     }
                     tagProblemCounts {
                         fundamental { tagName problemsSolved }
                         intermediate { tagName problemsSolved }
                         advanced { tagName problemsSolved }
-                    }
-                    badges {
-                        name
-                        icon
-                        creationDate
                     }
                 }
             }
@@ -169,18 +203,36 @@ export const verifyLeetCode = async (req, res) => {
 
         const statsData = await statsRes.json();
         const userData = statsData?.data?.matchedUser;
+        const allQuestionsList = statsData?.data?.allQuestionsCount || [];
 
-        // Extract Problem Counts
-        const acList = userData?.submitStats?.acSubmissionNum || [];
+        // Total available questions on LeetCode
+        const allQuestionsCount = {
+            all: allQuestionsList.find(x => x.difficulty === "All")?.count || 0,
+            easy: allQuestionsList.find(x => x.difficulty === "Easy")?.count || 0,
+            medium: allQuestionsList.find(x => x.difficulty === "Medium")?.count || 0,
+            hard: allQuestionsList.find(x => x.difficulty === "Hard")?.count || 0
+        };
+
+        // Extract Problem Counts from submitStatsGlobal (fallback to submitStats)
+        const acList = userData?.submitStatsGlobal?.acSubmissionNum || userData?.submitStats?.acSubmissionNum || [];
         const totalSolved = acList.find(x => x.difficulty === "All")?.count || 0;
         const easySolved = acList.find(x => x.difficulty === "Easy")?.count || 0;
         const mediumSolved = acList.find(x => x.difficulty === "Medium")?.count || 0;
         const hardSolved = acList.find(x => x.difficulty === "Hard")?.count || 0;
 
         // Submissions & Acceptance Rate
+        const totalSubList = userData?.submitStatsGlobal?.totalSubmissionNum || userData?.submitStats?.totalSubmissionNum || [];
         const acceptedSubmissions = acList.find(x => x.difficulty === "All")?.submissions || 0;
-        const totalSubmissions = userData?.submitStats?.totalSubmissionNum?.find(x => x.difficulty === "All")?.submissions || 0;
+        const totalSubmissions = totalSubList.find(x => x.difficulty === "All")?.submissions || 0;
         const acceptanceRate = totalSubmissions > 0 ? Number(((acceptedSubmissions / totalSubmissions) * 100).toFixed(1)) : 0;
+
+        // Beats Percentages
+        const beatsList = userData?.problemsSolvedBeatsStats || [];
+        const beatsStats = {
+            easy: beatsList.find(x => x.difficulty === "Easy")?.percentage || 0,
+            medium: beatsList.find(x => x.difficulty === "Medium")?.percentage || 0,
+            hard: beatsList.find(x => x.difficulty === "Hard")?.percentage || 0
+        };
 
         // LeetBuddy Points: Easy: 1pt, Medium: 3pts, Hard: 5pts
         const leetBuddyPoints = (easySolved * 1) + (mediumSolved * 3) + (hardSolved * 5);
@@ -236,12 +288,29 @@ export const verifyLeetCode = async (req, res) => {
             }
         }
 
-        // Format Badges
+        // Format Badges with display names (e.g. "Knight", "50 Days Badge 2026")
         const badges = (userData?.badges || []).map(b => ({
-            name: b.name,
+            id: b.id,
+            name: b.displayName || b.shortName || b.name,
             icon: b.icon?.startsWith("http") ? b.icon : (b.icon ? `https://leetcode.com${b.icon}` : ""),
+            category: b.category || "",
             creationDate: b.creationDate ? new Date(b.creationDate) : null
         }));
+
+        // Active / Most recent badge
+        const activeBadge = userData?.activeBadge ? {
+            id: userData.activeBadge.id,
+            name: userData.activeBadge.displayName || userData.activeBadge.name,
+            icon: userData.activeBadge.icon?.startsWith("http") ? userData.activeBadge.icon : (userData.activeBadge.icon ? `https://leetcode.com${userData.activeBadge.icon}` : "")
+        } : (badges.length > 0 ? badges[0] : null);
+
+        // User profile metadata
+        const profileMeta = {
+            ranking: userData?.profile?.ranking || 0,
+            userAvatar: userData?.profile?.userAvatar || "",
+            realName: userData?.profile?.realName || "",
+            aboutMe: userData?.profile?.aboutMe || ""
+        };
 
         // 6. SAVE / UPSERT TO DATABASE (profileDataModel)
         const profileData = await profileDataModel.findOneAndUpdate(
@@ -258,11 +327,16 @@ export const verifyLeetCode = async (req, res) => {
                     acceptanceRate,
                     leetBuddyPoints
                 },
+                allQuestionsCount,
+                beatsStats,
+                profile: profileMeta,
+                activeBadge,
                 topics,
                 badges,
                 activity: {
                     currentStreak: userData?.userCalendar?.streak || 0,
                     totalActiveDays: userData?.userCalendar?.totalActiveDays || 0,
+                    activeYears: userData?.userCalendar?.activeYears || [],
                     bestPerformingDay
                 },
                 submissionCalendar: parsedCalendar

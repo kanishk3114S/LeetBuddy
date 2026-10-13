@@ -1,6 +1,6 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useTheme } from './hooks/useTheme.js'
-import ThemeToggle from './components/ThemeToggle.jsx'
+import ThemeToggle from './components_dashboard/ThemeToggle.jsx'
 import './App.css'
 
 function App() {
@@ -10,7 +10,7 @@ function App() {
   const goToAuth = () => navigate('/auth')
   const scrollToHowItWorks = () => document.querySelector('#how-it-works')?.scrollIntoView({ behavior: 'smooth' })
 
-  if (location.pathname === '/auth') return <Outlet />
+  if (location.pathname === '/auth' || location.pathname === '/dashboard') return <Outlet />
 
   return (
     <main className={isDarkMode ? 'dark-mode' : ''}>

@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import { createBrowserRouter, RouterProvider, Outlet, createRoutesFromElements, Route } from 'react-router-dom'
 import Auth from './Auth.jsx'
+import Dashboard from './pages/Dashboard.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 
 
@@ -21,6 +22,7 @@ const ourRouter = createBrowserRouter(
   createRoutesFromElements(
     <Route path = "/" element = {<App/>}>
       <Route path ='/auth' element = {<Auth/>}/>
+      <Route path ='/dashboard' element = {<Dashboard/>}/>
     </Route>
   )
 )

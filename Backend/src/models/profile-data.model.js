@@ -20,6 +20,36 @@ const profileDataSchema = new mongoose.Schema({
         leetBuddyPoints: { type: Number, default: 0 } // Calculated before saving: (Easy*1 + Med*3 + Hard*5)
     },
 
+    // Total available questions on LeetCode for percentage/progress calculations
+    allQuestionsCount: {
+        all: { type: Number, default: 0 },
+        easy: { type: Number, default: 0 },
+        medium: { type: Number, default: 0 },
+        hard: { type: Number, default: 0 }
+    },
+
+    // Problem Solved Beats Percentages (e.g., beats 95.4% of users)
+    beatsStats: {
+        easy: { type: Number, default: 0 },
+        medium: { type: Number, default: 0 },
+        hard: { type: Number, default: 0 }
+    },
+
+    // User Profile Metadata from LeetCode
+    profile: {
+        ranking: { type: Number, default: 0 },
+        userAvatar: String,
+        realName: String,
+        aboutMe: String
+    },
+
+    // Active / Most Recent Badge
+    activeBadge: {
+        id: String,
+        name: String,
+        icon: String
+    },
+
     // Topic Wise Performance
     topics: [{
         tagName: String,        // e.g., "Dynamic Programming", "Arrays"
@@ -29,8 +59,10 @@ const profileDataSchema = new mongoose.Schema({
 
     // Badges Earned
     badges: [{
+        id: String,
         name: String,           // e.g., "100 Days Badge 2026"
         icon: String,           // URL to the badge image
+        category: String,
         creationDate: Date
     }],
 
@@ -39,6 +71,7 @@ const profileDataSchema = new mongoose.Schema({
         currentStreak: { type: Number, default: 0 },
         maxStreak: { type: Number, default: 0 },
         totalActiveDays: { type: Number, default: 0 },
+        activeYears: [Number],
         bestPerformingDay: {
             date: Date,
             submissionCount: Number
