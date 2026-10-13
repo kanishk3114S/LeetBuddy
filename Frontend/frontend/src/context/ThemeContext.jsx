@@ -8,6 +8,8 @@ export function ThemeProvider({ children }) {
     localStorage.setItem('theme', theme)
     document.documentElement.dataset.theme = theme
     document.body.dataset.theme = theme
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+    document.body.classList.toggle('dark', theme === 'dark')
     const pageColor = theme === 'dark' ? '#131815' : '#f8f8f5'
     document.documentElement.style.backgroundColor = pageColor
     document.body.style.backgroundColor = pageColor
