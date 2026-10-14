@@ -83,6 +83,17 @@ const profileDataSchema = new mongoose.Schema({
     submissionCalendar: {
         type: Map,
         of: Number 
+    },
+
+    // AI-generated Hero Card profile summary
+    heroCard: {
+        archetype: String,
+        headline: String,
+        summary: String,
+        strengths: [String],
+        bottlenecks: [String],
+        actionableTip: String,
+        generatedAt: Date
     }
 
 }, {

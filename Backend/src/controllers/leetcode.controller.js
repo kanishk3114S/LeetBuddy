@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import userModel from "../models/user.model.js";
 import profileDataModel from "../models/profile-data.model.js";
+import { generateHeroCard } from "../Ai/heroCard.service.js";
 
 // Master list of all recognized LeetCode topics across all 3 tiers
 const ALL_LEETCODE_TOPICS = [
@@ -312,7 +313,35 @@ export const verifyLeetCode = async (req, res) => {
             aboutMe: userData?.profile?.aboutMe || ""
         };
 
-        // 6. SAVE / UPSERT TO DATABASE (profileDataModel)
+        // 6. GENERATE AI HERO CARD PROFILE SUMMARY
+        let heroCard = null;
+        try {
+            heroCard = await generateHeroCard({
+                username,
+                stats: {
+                    totalSolved,
+                    easySolved,
+                    mediumSolved,
+                    hardSolved,
+                    totalSubmissions,
+                    acceptedSubmissions,
+                    acceptanceRate,
+                    leetBuddyPoints
+                },
+                allQuestionsCount,
+                beatsStats,
+                profile: profileMeta,
+                topics,
+                activity: {
+                    currentStreak: userData?.userCalendar?.streak || 0,
+                    totalActiveDays: userData?.userCalendar?.totalActiveDays || 0
+                }
+            });
+        } catch (aiErr) {
+            console.error("AI Hero Card generation error during verification:", aiErr);
+        }
+
+        // 7. SAVE / UPSERT TO DATABASE (profileDataModel)
         const profileData = await profileDataModel.findOneAndUpdate(
             { userId },
             {
@@ -339,20 +368,69 @@ export const verifyLeetCode = async (req, res) => {
                     activeYears: userData?.userCalendar?.activeYears || [],
                     bestPerformingDay
                 },
-                submissionCalendar: parsedCalendar
+                submissionCalendar: parsedCalendar,
+                ...(heroCard ? { heroCard } : {})
             },
             { upsert: true, new: true }
         );
 
-        // 7. RETURN IN RESPONSE TO FRONTEND
+        // 8. RETURN IN RESPONSE TO FRONTEND
         return res.status(200).json({
             message: "LeetCode profile verified and data synced successfully!",
             username,
-            profile: profileData
+            profile: profileData,
+            heroCard: heroCard || profileData?.heroCard || null
         });
 
     } catch (error) {
         console.error("Error verifying LeetCode profile:", error);
         return res.status(500).json({ error: "Internal server error while verifying profile" });
+    }
+};
+
+/**
+ * Controller to generate or fetch the AI Hero Card on-demand
+ * POST /api/leetcode/hero-card
+ */
+export const getOrGenerateHeroCard = async (req, res) => {
+    try {
+        const { profileData, username } = req.body || {};
+        const userId = req.user?.id;
+
+        // 1. If user is authenticated and DB has an existing heroCard, return it unless forceRefresh requested
+        if (userId && !req.query?.refresh) {
+            const existing = await profileDataModel.findOne({ userId });
+            if (existing?.heroCard?.summary) {
+                return res.status(200).json({ heroCard: existing.heroCard });
+            }
+        }
+
+        // 2. Source profile data either from request body or database
+        let targetData = profileData;
+        if (!targetData && userId) {
+            targetData = await profileDataModel.findOne({ userId });
+        }
+
+        if (!targetData) {
+            return res.status(400).json({ error: "Profile stats are required to generate an AI Hero Card" });
+        }
+
+        const heroCard = await generateHeroCard({
+            ...targetData,
+            username: username || targetData?.username || targetData?.profile?.realName || "Developer"
+        });
+
+        // 3. Persist if userId available
+        if (userId) {
+            await profileDataModel.findOneAndUpdate(
+                { userId },
+                { $set: { heroCard } }
+            );
+        }
+
+        return res.status(200).json({ heroCard });
+    } catch (error) {
+        console.error("Error in getOrGenerateHeroCard:", error);
+        return res.status(500).json({ error: "Failed to generate AI Hero Card" });
     }
 };

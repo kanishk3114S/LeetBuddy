@@ -1,0 +1,337 @@
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
+import { Sparkles, RotateCw, X, CheckCircle2, AlertTriangle, Target, Cpu } from 'lucide-react'
+
+export default function HeroCard({ stats, rank }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [heroCard, setHeroCard] = useState(() => {
+    try {
+      if (stats?.profile?.heroCard) return stats.profile.heroCard
+      const cached = localStorage.getItem('lb_hero_card')
+      return cached ? JSON.parse(cached) : null
+    } catch {
+      return null
+    }
+  })
+  const [isLoading, setIsLoading] = useState(false)
+  const [statusNotice, setStatusNotice] = useState(null)
+
+  // Sync when hero card is updated elsewhere via event
+  useEffect(() => {
+    const handleUpdate = (e) => {
+      if (e.detail) setHeroCard(e.detail)
+    }
+    window.addEventListener('lb_hero_card_updated', handleUpdate)
+    return () => window.removeEventListener('lb_hero_card_updated', handleUpdate)
+  }, [])
+
+  // Close on Escape key press
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsOpen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen])
+
+  // Fetch or re-generate hero card from backend
+  const fetchHeroCard = async (forceRefresh = false) => {
+    if (isLoading) return
+    setIsLoading(true)
+    setStatusNotice('Calling Gemini AI...')
+
+    try {
+      const authToken = localStorage.getItem('accessToken') || localStorage.getItem('lb_token')
+      const res = await fetch(`/api/leetcode/hero-card${forceRefresh ? '?refresh=true' : ''}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+        },
+        body: JSON.stringify({
+          profileData: stats?.profile || stats,
+          username: stats?.username
+        })
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        if (data?.heroCard) {
+          setHeroCard(data.heroCard)
+          setStatusNotice(data.heroCard.source === 'gemini' ? `✓ Synced with Gemini` : '✓ Updated')
+          try {
+            localStorage.setItem('lb_hero_card', JSON.stringify(data.heroCard))
+          } catch (e) {
+            console.warn('LocalStorage save error', e)
+          }
+        }
+      } else {
+        setStatusNotice('⚠️ Could not refresh')
+      }
+    } catch (err) {
+      console.warn('HeroCard fetch error:', err)
+      setStatusNotice('⚠️ Connection error')
+    } finally {
+      setIsLoading(false)
+      setTimeout(() => setStatusNotice(null), 3000)
+    }
+  }
+
+  const handleOpen = () => {
+    setIsOpen(true)
+    if (!heroCard && !isLoading) {
+      fetchHeroCard(false)
+    }
+  }
+
+  const rankColor = rank?.color || '#a855f7'
+  const archetype = heroCard?.archetype || 'Volume-Driven Problem Solver'
+  const summary = heroCard?.summary || (
+    stats?.profile?.stats?.totalSolved
+      ? `You are a ${archetype}. Your primary strength lies in Core Algorithms with ${stats.profile.stats.mediumSolved || 0} Mediums cleared. However, Dynamic Programming represents your primary scaling hurdle, indicating a pattern-recognition bottleneck.`
+      : 'Connect your verified LeetCode profile to unlock your AI Persona, strength breakdown, and bottleneck diagnosis.'
+  )
+
+  const modelLabel = heroCard?.model ? heroCard.model : 'gemini-3.5-flash-lite'
+  const isRealGemini = heroCard?.source === 'gemini' || !heroCard?.source
+
+  return (
+    <>
+      {/* ── Trigger Button: Minimalist, Symmetrical Tactile Pill ──────── */}
+      <button
+        type="button"
+        onClick={handleOpen}
+        title="View AI Persona & Diagnostic Hero Card"
+        className="
+          group relative inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-mono font-medium
+          transition-all duration-150 cursor-pointer select-none
+          border border-neutral-300 bg-white/90 text-neutral-800 shadow-xs
+          hover:border-neutral-400 hover:bg-neutral-50 hover:shadow-sm
+          dark:border-neutral-800 dark:bg-neutral-900/90 dark:text-neutral-200
+          dark:hover:border-neutral-700 dark:hover:bg-neutral-850
+          active:scale-[0.98]
+        "
+      >
+        {/* Pulsing Tier Color Dot */}
+        <span className="relative flex h-2 w-2 shrink-0">
+          <span
+            className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-70"
+            style={{ backgroundColor: rankColor }}
+          />
+          <span
+            className="relative inline-flex rounded-full h-2 w-2"
+            style={{ backgroundColor: rankColor }}
+          />
+        </span>
+
+        {/* Text Label */}
+        <span className="tracking-tight text-neutral-800 dark:text-neutral-200">
+          Hero Card
+        </span>
+
+        {/* Subtle Minimalist Sparkle Icon */}
+        <Sparkles className="h-3.5 w-3.5 text-neutral-400 group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors shrink-0" />
+      </button>
+
+      {/* ── Absolute Top Layer Modal: Symmetrical, Balanced, Clean ──── */}
+      {isOpen && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[999999] flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-md transition-all animate-in fade-in duration-150 select-none overflow-y-auto"
+          onClick={() => setIsOpen(false)}
+        >
+          {/* Card Frame: Balanced max-w-xl with Symmetrical Margins */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="
+              relative w-full max-w-xl rounded-2xl p-5 sm:p-6
+              bg-white text-neutral-900 border border-neutral-200 shadow-2xl
+              dark:bg-neutral-950 dark:text-neutral-100 dark:border-neutral-800/90
+              backdrop-blur-xl transition-all duration-200
+              animate-in zoom-in-95 ease-out
+              my-auto space-y-4
+            "
+            style={{
+              boxShadow: `0 0 40px ${rankColor}20, 0 20px 50px -10px rgba(0,0,0,0.15)`
+            }}
+          >
+            {/* Subtle Ambient Radial Glow */}
+            <div
+              className="absolute -right-12 -top-12 h-40 w-40 rounded-full blur-3xl opacity-20 pointer-events-none"
+              style={{ backgroundColor: rankColor }}
+            />
+
+            {/* ── Top Bar: Symmetric Branding on Left, Minimalist Buttons on Right ── */}
+            <div className="relative z-10 flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
+              {/* Left Branding Group */}
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-neutral-100 border border-neutral-200 text-neutral-700 dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-300">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                    LeetBuddy AI Mentor
+                  </span>
+                  <span
+                    className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-mono font-medium border"
+                    style={{
+                      backgroundColor: isRealGemini ? '#10b98115' : '#f59e0b15',
+                      borderColor: isRealGemini ? '#10b98130' : '#f59e0b30',
+                      color: isRealGemini ? '#059669' : '#d97706'
+                    }}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                    {modelLabel}
+                  </span>
+                </div>
+              </div>
+
+              {/* Right Action Cluster: Symmetrical Minimalist Buttons */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  title="Re-analyze Stats with Gemini AI"
+                  onClick={() => fetchHeroCard(true)}
+                  disabled={isLoading}
+                  className="
+                    h-7.5 px-2.5 flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-100/80
+                    text-[11px] font-mono text-neutral-700 hover:text-neutral-900 hover:border-neutral-300
+                    dark:border-neutral-800 dark:bg-neutral-900/90 dark:text-neutral-300 dark:hover:text-white dark:hover:border-neutral-700
+                    active:scale-95 transition-all cursor-pointer disabled:opacity-50
+                  "
+                >
+                  <RotateCw className={`h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400 transition-transform ${isLoading ? 'animate-spin text-neutral-900 dark:text-white' : ''}`} />
+                  <span>{isLoading ? 'Syncing…' : 'Re-analyze'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  title="Close (Esc)"
+                  className="
+                    h-7.5 w-7.5 flex items-center justify-center rounded-lg border border-neutral-200 bg-neutral-100/80
+                    text-neutral-500 hover:text-neutral-900 hover:border-neutral-300
+                    dark:border-neutral-800 dark:bg-neutral-900/90 dark:text-neutral-400 dark:hover:text-white dark:hover:border-neutral-700
+                    active:scale-95 transition-all cursor-pointer
+                  "
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Status Notice Pill if active */}
+            {statusNotice && (
+              <div className="relative z-10 rounded-lg border border-neutral-200 bg-neutral-50 py-1 px-3 text-center text-xs font-mono text-neutral-700 dark:border-neutral-800 dark:bg-neutral-900/95 dark:text-neutral-300">
+                {statusNotice}
+              </div>
+            )}
+
+            {/* ── Archetype Title & Tier Pill: Symmetrical Layout ── */}
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
+              <div>
+                <span className="font-mono text-[10px] text-neutral-400 dark:text-neutral-500 uppercase tracking-widest block font-bold">
+                  Identified Persona
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black tracking-tight text-neutral-900 dark:text-white mt-0.5">
+                  {archetype}
+                </h3>
+              </div>
+
+              <div
+                className="self-start sm:self-center shrink-0 rounded-lg px-2.5 py-1 font-mono text-xs font-bold uppercase tracking-wide border shadow-xs"
+                style={{
+                  backgroundColor: `${rankColor}15`,
+                  color: rankColor,
+                  borderColor: `${rankColor}40`
+                }}
+              >
+                Tier {rank?.tier || 1} • {rank?.title || 'Rookie'}
+              </div>
+            </div>
+
+            {/* Headline Tagline */}
+            {heroCard?.headline && (
+              <p className="relative z-10 text-xs font-medium text-neutral-600 dark:text-neutral-400 italic">
+                "{heroCard.headline}"
+              </p>
+            )}
+
+            {/* ── Symmetrical Executive Takeaway Callout Box ── */}
+            <div className="relative z-10 rounded-xl border border-neutral-200 bg-neutral-50/90 dark:border-neutral-800/90 dark:bg-neutral-900/70 p-4 shadow-inner">
+              <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 dark:text-neutral-500 font-extrabold block mb-1.5">
+                Executive Takeaway
+              </span>
+              <p className="text-xs sm:text-[13px] leading-relaxed text-neutral-800 dark:text-neutral-200 font-normal">
+                {summary}
+              </p>
+            </div>
+
+            {/* ── Core Strengths & Bottlenecks: Balanced 2-Column Grid ── */}
+            <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Strengths Card */}
+              <div className="flex flex-col justify-between rounded-xl border border-neutral-200 bg-neutral-50/80 dark:border-neutral-800/90 dark:bg-neutral-900/40 p-3.5 space-y-2">
+                <div className="flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>Dominant Strengths</span>
+                </div>
+                <ul className="space-y-1.5 text-xs text-neutral-700 dark:text-neutral-300">
+                  {(heroCard?.strengths || ['High Medium-solve volume', 'Consistent execution velocity']).map((s, idx) => (
+                    <li key={idx} className="flex items-start gap-1.5">
+                      <span className="text-emerald-500 font-bold shrink-0 leading-none mt-0.5">•</span>
+                      <span className="leading-tight">{s}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Bottlenecks Card */}
+              <div className="flex flex-col justify-between rounded-xl border border-neutral-200 bg-neutral-50/80 dark:border-neutral-800/90 dark:bg-neutral-900/40 p-3.5 space-y-2">
+                <div className="flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                  <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span>Primary Bottlenecks</span>
+                </div>
+                <ul className="space-y-1.5 text-xs text-neutral-700 dark:text-neutral-300">
+                  {(heroCard?.bottlenecks || ['Dynamic Programming recurrence', 'Hard-level decomposition']).map((b, idx) => (
+                    <li key={idx} className="flex items-start gap-1.5">
+                      <span className="text-amber-500 font-bold shrink-0 leading-none mt-0.5">•</span>
+                      <span className="leading-tight">{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* ── Actionable Directive Banner ── */}
+            {heroCard?.actionableTip && (
+              <div className="relative z-10 rounded-xl border border-neutral-200 bg-neutral-50/80 dark:border-neutral-800 dark:bg-neutral-900/40 p-3 flex items-start gap-2.5 text-xs">
+                <Target className="h-4 w-4 text-indigo-500 dark:text-indigo-400 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <span className="font-mono text-[10px] uppercase tracking-wider font-bold text-neutral-700 dark:text-neutral-300 block">
+                    Actionable Directive
+                  </span>
+                  <p className="text-neutral-600 dark:text-neutral-400 text-[11px] leading-relaxed">
+                    {heroCard.actionableTip}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* ── Symmetrical Footer ── */}
+            <div className="relative z-10 pt-2 border-t border-neutral-200 dark:border-neutral-850 flex items-center justify-between text-[10px] font-mono text-neutral-500 dark:text-neutral-500">
+              <div className="flex items-center gap-1.5">
+                <Cpu className="h-3 w-3 text-neutral-400 dark:text-neutral-500 shrink-0" />
+                <span>Google Gemini Engine</span>
+                {heroCard?.latencyMs && (
+                  <span className="text-emerald-600 dark:text-emerald-500 font-bold">• {heroCard.latencyMs}ms</span>
+                )}
+              </div>
+              <span className="text-neutral-400 dark:text-neutral-400">Esc to close</span>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  )
+}

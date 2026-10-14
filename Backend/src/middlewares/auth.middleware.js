@@ -16,6 +16,8 @@ const PUBLIC_ROUTES = [
     { method: "POST", path: "/api/v1/auth/register" },
     { method: "POST", path: "/api/v1/auth/login" },
     { method: "GET", path: "/api/v1/auth/refresh-token" },
+    { method: "POST", path: "/api/leetcode/hero-card" },
+    { method: "POST", path: "/api/v1/leetcode/hero-card" },
 ];
 
 /**

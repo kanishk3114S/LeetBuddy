@@ -1,0 +1,141 @@
+import { GoogleGenAI } from "@google/genai";
+import config from "../config/config.js";
+
+/**
+ * Generates an AI-driven high-level developer persona and executive summary (Hero Card)
+ * based on verified LeetCode profile metrics.
+ * 
+ * @param {Object} profileData - Normalized user profile data and statistics
+ * @returns {Promise<Object>} Hero card content
+ */
+export async function generateHeroCard(profileData) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        console.warn("[HeroCard] GEMINI_API_KEY is not defined in environment variables. Using fallback summary.");
+        return createFallbackHeroCard(profileData);
+    }
+
+    const {
+        username = "Developer",
+        stats = {},
+        allQuestionsCount = {},
+        beatsStats = {},
+        topics = [],
+        activity = {}
+    } = profileData;
+
+    // Filter and sort top topics
+    const activeTopics = (topics || [])
+        .filter(t => t.problemsSolved > 0)
+        .sort((a, b) => b.problemsSolved - a.problemsSolved);
+
+    const top3Topics = activeTopics.slice(0, 3).map(t => `${t.tagName} (${t.problemsSolved} solved)`).join(", ");
+    
+    // Check advanced topics with 0 or low solves
+    const criticalAdvanced = ["Dynamic Programming", "Graph Theory", "Backtracking", "Trie", "Binary Search"];
+    const weakTopics = criticalAdvanced.filter(crit => {
+        const found = (topics || []).find(t => t.tagName.toLowerCase() === crit.toLowerCase());
+        return !found || found.problemsSolved <= 2;
+    }).slice(0, 2);
+
+    const inputMetrics = {
+        username,
+        totalSolved: stats.totalSolved || 0,
+        easySolved: stats.easySolved || 0,
+        mediumSolved: stats.mediumSolved || 0,
+        hardSolved: stats.hardSolved || 0,
+        totalSubmissions: stats.totalSubmissions || 0,
+        acceptedSubmissions: stats.acceptedSubmissions || 0,
+        acceptanceRate: `${stats.acceptanceRate || 0}%`,
+        leetBuddyScore: stats.leetBuddyPoints || 0,
+        beatsPercentages: {
+            easy: `${beatsStats.easy || 0}%`,
+            medium: `${beatsStats.medium || 0}%`,
+            hard: `${beatsStats.hard || 0}%`
+        },
+        currentStreak: `${activity.currentStreak || 0} days`,
+        totalActiveDays: `${activity.totalActiveDays || 0} days`,
+        topDominantTopics: top3Topics || "General Arrays & Strings",
+        laggingOrUnderrepresentedTopics: weakTopics.join(", ") || "Advanced Hard Categories"
+    };
+
+    const systemPrompt = `
+You are the elite AI Competitive Programming Mentor for 'LeetBuddy'.
+Analyze the following aggregated LeetCode performance statistics and synthesize a high-impact, human-readable "Hero Card" profile summary.
+
+CRITICAL TONE & STYLE RULES:
+- Identify an evocative developer Archetype (e.g. "Volume-Driven Problem Solver", "Algorithmic Precisionist", "Graph & Recursion Specialist", "Heuristic Strategist").
+- The summary MUST read like a high-level executive takeaway with actionable truth.
+- Follow this exact pattern for the summary:
+  "You are a [Archetype]. Your primary strength lies in [Top Topics], maintaining a [Acceptance Rate / Metric] on Mediums/Problems. However, [Weakness Topic or Hard conversion] represents a key bottleneck, indicating a [Specific Conceptual / Recognition Bottleneck]."
+- Respond ONLY with valid, parseable raw JSON without markdown code fences (\`\`\`json).
+`;
+
+    const userPrompt = `
+Generate the Hero Card JSON for this user:
+${JSON.stringify(inputMetrics, null, 2)}
+
+Required JSON Schema:
+{
+  "archetype": "string (3-4 words)",
+  "headline": "string (punchy 1-sentence tagline)",
+  "summary": "string (2-3 concise sentences)",
+  "strengths": ["string", "string"],
+  "bottlenecks": ["string", "string"],
+  "actionableTip": "string (1 actionable tip)"
+}
+`;
+
+    // Try models in order of capability and speed
+ const candidateModels = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.8-flash"];
+
+    for (const modelName of candidateModels) {
+        try {
+            console.log(`\n======================================================`);
+            console.log(`[Gemini AI Pipeline] 🚀 Calling Google Gemini API...`);
+            console.log(`[Gemini AI Pipeline] Target Model : ${modelName}`);
+            console.log(`[Gemini AI Pipeline] User Target  : ${username} (${stats.totalSolved || 0} solved, ${stats.mediumSolved || 0} mediums)`);
+            console.log(`======================================================`);
+            
+            const startTime = Date.now();
+            const ai = new GoogleGenAI({ apiKey });
+            const response = await ai.models.generateContent({
+                model: modelName,
+                contents: `${systemPrompt}\n\n${userPrompt}`,
+                config: {
+                    responseMimeType: "application/json"
+                }
+            });
+            const duration = Date.now() - startTime;
+
+            const text = response?.text?.trim() || "";
+            // Clean up any stray markdown ticks if present
+            const cleaned = text.replace(/^```json\s*/i, "").replace(/\s*```$/i, "").trim();
+            const parsed = JSON.parse(cleaned);
+
+            if (parsed?.summary && parsed?.archetype) {
+                console.log(`[Gemini AI Pipeline] ✅ SUCCESS! Received response in ${duration}ms from ${modelName}`);
+                console.log(`[Gemini AI Pipeline] Archetype: "${parsed.archetype}"`);
+                console.log(`[Gemini AI Pipeline] Takeaway : "${parsed.summary.slice(0, 100)}..."\n`);
+
+                return {
+                    ...parsed,
+                    source: "gemini",
+                    model: modelName,
+                    latencyMs: duration,
+                    generatedAt: new Date().toISOString()
+                };
+            }
+        } catch (err) {
+            console.warn(`[Gemini AI Pipeline] ⚠️ Model ${modelName} call failed (${err?.message || err}). Trying fallback candidate...`);
+        }
+    }
+
+    console.warn("[Gemini AI Pipeline] ⚠️ All Gemini API models failed. Returning algorithmic fallback Hero Card.");
+    return createFallbackHeroCard(profileData);
+}
+
+/**
+ * Algorithmic fallback if external AI call is unavailable
+ */
+

@@ -10,7 +10,8 @@ function App() {
   const goToAuth = () => navigate('/auth')
   const scrollToHowItWorks = () => document.querySelector('#how-it-works')?.scrollIntoView({ behavior: 'smooth' })
 
-  if (location.pathname === '/auth' || location.pathname === '/dashboard') return <Outlet />
+  const appRoutes = ['/auth', '/dashboard', '/profile-analysis', '/profile']
+  if (appRoutes.includes(location.pathname)) return <Outlet />
 
   return (
     <main className={isDarkMode ? 'dark-mode' : ''}>

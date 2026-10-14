@@ -14,14 +14,14 @@ function generateRandomToken() {
 function StartScreen({ onBegin }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-dashed border-[#d1d5d1] bg-[#f4f6f2] dark:border-[#3a453d] dark:bg-[#1a211d]">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-dashed border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900">
         <span className="text-2xl">⚡</span>
       </div>
       <div>
-        <h3 className="text-[22px] font-extrabold tracking-[-0.8px] text-[#171a1d] dark:text-[#edf2ed]">
+        <h3 className="text-[22px] font-extrabold tracking-[-0.8px] text-neutral-900 dark:text-neutral-100">
           Connect your LeetCode profile
         </h3>
-        <p className="mt-2 max-w-[340px] text-[13px] leading-6 text-[#71787f] dark:text-[#8d988e]">
+        <p className="mt-2 max-w-[340px] text-[13px] leading-6 text-neutral-500 dark:text-neutral-400">
           Verify your profile and unlock your live LeetCode stats, streaks, and weakness analytics.
         </p>
       </div>
@@ -29,10 +29,10 @@ function StartScreen({ onBegin }) {
         type="button"
         onClick={onBegin}
         className="
-          flex items-center gap-2 rounded-[7px] bg-[#171a1d] px-6 py-3 text-[13px]
-          font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-black
-          dark:bg-[#c5ef75] dark:text-[#172011] dark:hover:bg-[#d4f88e]
-          dark:shadow-[0_4px_16px_rgba(197,239,117,0.18)]
+          flex items-center gap-2 rounded-lg bg-neutral-900 px-6 py-3 text-[13px]
+          font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-neutral-800
+          dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-white
+          shadow-sm
         "
       >
         Verify LeetCode Profile <span className="text-base">↗</span>
@@ -52,21 +52,21 @@ function UsernameStep({ onGenerate, isGenerating }) {
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4">
-      <div className="w-full max-w-[400px] rounded-[10px] border border-[#dce0dc] bg-white p-7 shadow-[0_12px_40px_rgba(24,31,29,0.08)] dark:border-[#38443b] dark:bg-[#1e2621] dark:shadow-[0_12px_40px_rgba(0,0,0,0.4)]">
-        <h3 className="text-[18px] font-extrabold tracking-[-0.6px] text-[#171a1d] dark:text-[#edf2ed]">
+      <div className="w-full max-w-[400px] rounded-xl border border-neutral-200 bg-white p-7 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+        <h3 className="text-[18px] font-extrabold tracking-[-0.6px] text-neutral-900 dark:text-neutral-100">
           Enter your LeetCode username
         </h3>
-        <p className="mt-1.5 text-[12px] text-[#71787f] dark:text-[#8d988e]">
+        <p className="mt-1.5 text-[12px] text-neutral-500 dark:text-neutral-400">
           We will generate a safe verification token for you to paste into your LeetCode bio.
         </p>
         <form onSubmit={handleSubmit} className="mt-5">
           <input
             className="
-              w-full rounded-[6px] border border-[#e3e5e1] bg-[#fbfcfa] px-3.5 py-3
-              text-[13px] text-[#171a1d] placeholder:text-[#a3aaa6] outline-none transition
-              focus:border-[#8db94d] focus:ring-2 focus:ring-[#dceec1]
-              dark:border-[#3d493f] dark:bg-[#1a211d] dark:text-[#f8faf8]
-              dark:placeholder:text-[#778178] dark:focus:border-[#a8de4e] dark:focus:ring-[#a8de4e]/20
+              w-full rounded-lg border border-neutral-200 bg-neutral-50/60 px-3.5 py-3
+              text-[13px] text-neutral-900 placeholder:text-neutral-400 outline-none transition
+              focus:border-neutral-900 focus:bg-white focus:ring-2 focus:ring-neutral-900/10
+              dark:border-neutral-700 dark:bg-neutral-800/60 dark:text-neutral-100
+              dark:placeholder:text-neutral-500 dark:focus:border-neutral-400 dark:focus:ring-neutral-400/20
             "
             type="text"
             placeholder="e.g. your_leetcode_handle"
@@ -80,9 +80,9 @@ function UsernameStep({ onGenerate, isGenerating }) {
             type="submit"
             disabled={isGenerating}
             className="
-              mt-4 w-full rounded-[6px] bg-[#171a1d] py-3 text-[12px] font-extrabold
+              mt-4 w-full rounded-lg bg-neutral-900 py-3 text-[12px] font-extrabold
               text-white transition hover:-translate-y-0.5 disabled:opacity-50
-              dark:bg-[#c5ef75] dark:text-[#172011] dark:hover:bg-[#d4f88e]
+              dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-white
             "
           >
             {isGenerating ? 'Generating...' : 'Generate Verification Code ↗'}
@@ -105,39 +105,39 @@ function TokenStep({ username, token, onVerify, error, onBack }) {
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4">
-      <div className="w-full max-w-[440px] rounded-[10px] border border-[#dce0dc] bg-white p-7 shadow-[0_12px_40px_rgba(24,31,29,0.08)] dark:border-[#38443b] dark:bg-[#1e2621] dark:shadow-[0_12px_40px_rgba(0,0,0,0.4)]">
+      <div className="w-full max-w-[440px] rounded-xl border border-neutral-200 bg-white p-7 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-[#a8de4e]" />
-            <span className="font-mono text-[12px] uppercase tracking-widest text-[#71787f] dark:text-[#8d988e]">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="font-mono text-[12px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
               Token for @{username}
             </span>
           </div>
           <button
             type="button"
             onClick={onBack}
-            className="text-[12px] text-[#71787f] hover:text-[#171a1d] dark:text-[#8d988e] dark:hover:text-white"
+            className="text-[12px] text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition"
           >
             Change
           </button>
         </div>
 
-        <h3 className="text-[17px] font-extrabold tracking-[-0.5px] text-[#171a1d] dark:text-[#edf2ed]">
+        <h3 className="text-[17px] font-extrabold tracking-[-0.5px] text-neutral-900 dark:text-neutral-100">
           Paste this in your LeetCode "About Me"
         </h3>
-        <p className="mt-1 text-[12px] text-[#71787f] dark:text-[#8d988e]">
+        <p className="mt-1 text-[12px] text-neutral-500 dark:text-neutral-400">
           Go to your LeetCode profile → Edit Profile → About Me → paste the code below → Save.
         </p>
 
         {/* Token display */}
-        <div className="mt-4 flex items-center justify-between rounded-[7px] border border-[#e3e5e1] bg-[#f4f6f2] px-4 py-3 dark:border-[#3d493f] dark:bg-[#1a211d]">
-          <code className="font-mono text-[14px] font-bold text-[#171a1d] dark:text-[#c5ef75] select-all">
+        <div className="mt-4 flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-950">
+          <code className="font-mono text-[14px] font-bold text-neutral-900 dark:text-neutral-100 select-all">
             {token}
           </code>
           <button
             type="button"
             onClick={copy}
-            className="ml-3 shrink-0 rounded-[5px] bg-[#eef0ec] px-3 py-1.5 font-mono text-[12px] font-bold text-[#4f5955] transition hover:bg-[#e0e4de] dark:bg-[#2d3730] dark:text-[#9fb8a8] dark:hover:bg-[#38443b]"
+            className="ml-3 shrink-0 rounded px-3 py-1.5 font-mono text-[12px] font-bold border border-neutral-200 bg-white text-neutral-800 shadow-xs transition hover:bg-neutral-50 hover:border-neutral-300 dark:border-transparent dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
           >
             {copied ? '✓ Copied' : 'Copy'}
           </button>
@@ -150,8 +150,8 @@ function TokenStep({ username, token, onVerify, error, onBack }) {
             'Paste this token into the "About Me" bio field and click Save',
             'Return here and click "Verify Profile" below',
           ].map((step, i) => (
-            <li key={i} className="flex items-start gap-2.5 text-[12px] text-[#71787f] dark:text-[#8d988e]">
-              <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#eef0ec] font-mono text-[11px] text-[#171a1d] dark:bg-[#2d3730] dark:text-[#edf2ed]">
+            <li key={i} className="flex items-start gap-2.5 text-[12px] text-neutral-500 dark:text-neutral-400">
+              <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-neutral-100 font-mono text-[11px] text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 font-bold">
                 {i + 1}
               </span>
               {step}
@@ -160,7 +160,7 @@ function TokenStep({ username, token, onVerify, error, onBack }) {
         </ol>
 
         {error && (
-          <div className="mt-4 rounded-[6px] border border-red-200 bg-red-50 p-3 text-[12px] text-red-600 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400">
+          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-[12px] text-red-600 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400">
             {error}
           </div>
         )}
@@ -169,9 +169,9 @@ function TokenStep({ username, token, onVerify, error, onBack }) {
           type="button"
           onClick={onVerify}
           className="
-            mt-6 w-full rounded-[6px] bg-[#171a1d] py-3 text-[12px] font-extrabold
+            mt-6 w-full rounded-lg bg-neutral-900 py-3 text-[12px] font-extrabold
             text-white transition hover:-translate-y-0.5
-            dark:bg-[#c5ef75] dark:text-[#172011] dark:hover:bg-[#d4f88e]
+            dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-white
           "
         >
           Verify Profile ↗
@@ -186,22 +186,22 @@ function LoadingStep({ statusText }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-5 text-center">
       <div className="relative h-14 w-14">
-        <div className="absolute inset-0 rounded-full border-4 border-[#e3e5e1] dark:border-[#2d3730]" />
-        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#a8de4e] animate-spin" />
+        <div className="absolute inset-0 rounded-full border-4 border-neutral-200 dark:border-neutral-800" />
+        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-neutral-900 dark:border-t-neutral-100 animate-spin" />
       </div>
       <div>
-        <h3 className="text-[18px] font-extrabold tracking-[-0.6px] text-[#171a1d] dark:text-[#edf2ed]">
+        <h3 className="text-[18px] font-extrabold tracking-[-0.6px] text-neutral-900 dark:text-neutral-100">
           Verifying LeetCode Profile…
         </h3>
-        <p className="mt-1.5 text-[13px] text-[#71787f] dark:text-[#8d988e]">
+        <p className="mt-1.5 text-[13px] text-neutral-500 dark:text-neutral-400">
           {statusText || 'Checking bio handshake and fetching comprehensive profile stats...'}
         </p>
       </div>
       <div className="flex items-center gap-1.5">
-        {['Checking bio', 'Ingesting stats', 'Mapping topics', 'Calculating score'].map((label, i) => (
+        {['Checking bio', 'Ingesting stats', 'Mapping topics', 'Calculating score'].map((label) => (
           <span
             key={label}
-            className="rounded-full bg-[#eef0ec] px-2.5 py-1 font-mono text-[11px] text-[#4f5955] dark:bg-[#1e2621] dark:text-[#9fb8a8]"
+            className="rounded-full bg-neutral-100 px-2.5 py-1 font-mono text-[11px] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
           >
             {label}
           </span>
@@ -422,6 +422,14 @@ export default function VerifyFlow({ onVerified }) {
           const data = await res.json()
           if (data?.profile) {
             backendSuccess = true
+            if (data?.heroCard) {
+              try {
+                localStorage.setItem('lb_hero_card', JSON.stringify(data.heroCard))
+                window.dispatchEvent(new CustomEvent('lb_hero_card_updated', { detail: data.heroCard }))
+              } catch (e) {
+                console.warn('LocalStorage save error', e)
+              }
+            }
             onVerified({ username: data.username || username, profile: data.profile })
             return
           }
@@ -476,6 +484,26 @@ export default function VerifyFlow({ onVerified }) {
 
         // Bio matches! Format real data
         const formattedProfile = formatGraphQLResponse(user, gqlData?.data?.allQuestionsCount || [])
+
+        // Asynchronously request AI Hero Card from backend AI service
+        fetch('/api/leetcode/hero-card', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profileData: formattedProfile, username })
+        })
+          .then(r => r.json())
+          .then(c => {
+            if (c?.heroCard) {
+              try {
+                localStorage.setItem('lb_hero_card', JSON.stringify(c.heroCard))
+                window.dispatchEvent(new CustomEvent('lb_hero_card_updated', { detail: c.heroCard }))
+              } catch (e) {
+                console.warn('LocalStorage save error', e)
+              }
+            }
+          })
+          .catch(e => console.warn('Background hero card error:', e))
+
         onVerified({ username, profile: formattedProfile })
       }
 

@@ -5,8 +5,8 @@
 
 :root {
   font-family: 'Manrope', Arial, sans-serif;
-  color: #171a1d;
-  background: #f8f8f5;
+  color: #0f172a;
+  background: #ffffff;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -19,7 +19,7 @@ html, body, #root {
 body {
   margin: 0;
   min-width: 320px;
-  background: #f8f8f5;
+  background: #ffffff;
 }
 html[data-theme='dark'], body[data-theme='dark'], html.dark, body.dark {
   background: #131815;

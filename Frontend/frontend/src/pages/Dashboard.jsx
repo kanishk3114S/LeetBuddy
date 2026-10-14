@@ -31,13 +31,13 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f4f6f2] font-[Manrope,Arial,sans-serif] dark:bg-[#131815] transition-colors duration-300">
+    <div className="flex h-screen overflow-hidden bg-neutral-50 font-[Manrope,Arial,sans-serif] dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors duration-300">
       {/* Sidebar */}
       <Sidebar active={activeNav} setActive={setActiveNav} />
 
       {/* Main */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        <DashHeader user={user} />
+        <DashHeader user={user} stats={stats} />
 
         {/* Content area */}
         <div className="flex flex-1 flex-col overflow-hidden">
