@@ -31,12 +31,17 @@ export default function Sidebar({ active, setActive }) {
   const NAV_ITEMS = [
     { id: 'dashboard', label: 'Dashboard', icon: '⌘', path: '/dashboard' },
     { id: 'profile-analysis', label: 'Profile Insights', icon: '◔', path: '/profile-analysis' },
+    { id: 'topic-mastery', label: 'Topic Mastery', icon: '◈', path: '/topic-mastery' },
     { id: 'contests', label: 'Contest', icon: '⌁', badge: 'Soon', disabled: true },
-    { id: 'weakness', label: 'Weakness', icon: '✦', badge: 'Soon', disabled: true },
+    { id: 'weakness', label: 'Weakness AI', icon: '✦', badge: 'Soon', disabled: true },
   ]
 
   const currentActive = active || (
-    location.pathname.startsWith('/profile') ? 'profile-analysis' : 'dashboard'
+    location.pathname.startsWith('/profile')
+      ? 'profile-analysis'
+      : location.pathname.startsWith('/topic-mastery')
+      ? 'topic-mastery'
+      : 'dashboard'
   )
 
   const handleNavClick = (item) => {

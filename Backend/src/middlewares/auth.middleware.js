@@ -18,6 +18,8 @@ const PUBLIC_ROUTES = [
     { method: "GET", path: "/api/v1/auth/refresh-token" },
     { method: "POST", path: "/api/leetcode/hero-card" },
     { method: "POST", path: "/api/v1/leetcode/hero-card" },
+    { method: "POST", path: "/api/leetcode/refresh" },
+    { method: "POST", path: "/api/v1/leetcode/refresh" },
 ];
 
 /**
@@ -35,15 +37,9 @@ export async function verifyAccessToken(req, res, next) {
     const requestMethod = req.method.toUpperCase();
 
     // Check if the current route is in the public whitelist
-    if (ALLOW_PUBLIC_AUTH_ROUTES) {
-        const isPublicRoute = PUBLIC_ROUTES.some(
-            route => route.method === requestMethod && route.path === requestPath
-        );
-
-        if (isPublicRoute) {
-            return next();
-        }
-    }
+    const isPublicRoute = ALLOW_PUBLIC_AUTH_ROUTES && PUBLIC_ROUTES.some(
+        route => route.method === requestMethod && route.path === requestPath
+    );
 
     // Extract access token from Authorization header, cookies, or custom headers
     let token = null;
@@ -59,8 +55,11 @@ export async function verifyAccessToken(req, res, next) {
         token = req.headers["x-access-token"];
     }
 
-    // If no access token is provided, return 401 Unauthorized
+    // If no access token is provided, proceed if public or return 401
     if (!token) {
+        if (isPublicRoute) {
+            return next();
+        }
         return res.status(401).json({
             message: "Access token not provided/found"
         });
@@ -74,6 +73,7 @@ export async function verifyAccessToken(req, res, next) {
         if (decoded.sessionId) {
             const session = await sessionModel.findById(decoded.sessionId);
             if (!session || session.revoked) {
+                if (isPublicRoute) return next();
                 return res.status(401).json({
                     message: "Session has been revoked or expired. Please login again."
                 });
@@ -85,6 +85,9 @@ export async function verifyAccessToken(req, res, next) {
         req.user = decoded;
         return next();
     } catch (error) {
+        if (isPublicRoute) {
+            return next();
+        }
         if (error.name === "TokenExpiredError") {
             return res.status(401).json({
                 message: "Access token has expired. Please refresh your token or login again."

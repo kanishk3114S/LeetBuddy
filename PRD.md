@@ -1,12 +1,8 @@
-Absolutely. We should make the **PRD before writing code**, and for LeetBuddy I’d keep the V1 scope deliberately tight. The three-section architecture stays fixed, while later versions deepen each section.
-
-Here is a proper production-style PRD tailored to **LeetBuddy V1**, using your template but adapting it where a product like this needs different sections.
-
 # Product Requirements Document (PRD)
 
 ## LeetBuddy
 
-### Version 1.0.0
+### Version 1.1.0
 
 ### Product Type
 
@@ -18,23 +14,26 @@ Personalized Competitive Programming Analytics & Learning Platform
 
 **Product Name:** LeetBuddy
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 
-**Product Type:** Web application for competitive programming analysis, contest performance analysis, and personalized weakness-based learning.
+**Product Type:** Web application for competitive programming analysis, contest performance analysis, targeted weak-topic practice, and personalized RAG-powered weakness diagnostics.
 
-LeetBuddy is a web application that analyzes a user's competitive programming activity and converts raw problem-solving data into actionable insights.
+LeetBuddy is a web application that analyzes a user's competitive programming activity and converts raw problem-solving data into actionable, data-driven mastery.
 
-The product is built around three core sections:
+The product page and architectural flow follows:
 
-1. **Profile Analysis**
-2. **Contest Analysis**
-3. **Weakness Center**
+1. **Dashboard & Verification** `[COMPLETED]` — Secure LeetCode handshake, 12-month heatmap, streak metrics, badges, and live sync.
+2. **Profile Analysis** `[COMPLETED]` — AI Hero Card, 11-Tier Progress Mountain, Difficulty Matrix, Radar Matrix, and Temporal Behavioral Analysis.
+3. **Practice Weak Topics** `[UPCOMING]` — Topic-targeted problem ladders based directly on detected weaknesses.
+4. **Contest Analysis** `[UPCOMING]` — Recent and 5-contest performance breakdown, rating shifts, and time-pressure failure analysis.
+5. **Weakness AI [RAG-Based System]** `[UPCOMING]` — Retrieval-Augmented Generation system diagnosing root-cause bottlenecks and providing grounded theory & conceptual remediation.
 
 LeetBuddy does not aim to be another competitive programming platform. Its purpose is to answer:
 
 > **"What am I good at, where am I weak, why am I struggling, and what should I practice next?"**
 
-The first version will use deterministic backend analysis for statistics and weakness detection, with an LLM used to interpret the collected evidence, explain weaknesses, provide personalized insights, and assist with learning recommendations.
+The core design philosophy is:
+> **The backend calculates objective facts. The RAG AI interprets those facts with canonical DSA theory.**
 
 ---
 
@@ -42,847 +41,348 @@ The first version will use deterministic backend analysis for statistics and wea
 
 ### 2.1 Primary Goals
 
-* Give users a clear understanding of their competitive programming profile.
-* Analyze recent contest performance and identify recurring weaknesses.
-* Identify general and contest-specific weak topics.
-* Explain **why** a user is struggling with a topic.
-* Provide focused theory for weak concepts.
-* Recommend similar problems for targeted practice.
-* Create a feedback loop where future performance can be compared against previous weaknesses.
+* Give users an immediate, deep understanding of their competitive programming profile and gamified ranking.
+* Direct users from diagnosed weaknesses straight into structured, targeted problem practice.
+* Analyze recent contest performance and identify recurring mistakes under contest pressure.
+* Identify general and contest-specific weak topics with mathematical accuracy.
+* Explain **why** a user is struggling with a topic using a **RAG-based AI system** that retrieves grounded theory.
+* Provide focused conceptual remediation without LLM hallucinations.
+* Recommend laddered practice problems to bridge the gap from Medium to Hard.
+* Create a continuous feedback loop where future performance can be compared against previous weaknesses.
 
 ### 2.2 Secondary Goals
 
-* Make competitive programming progress easier to understand.
-* Reduce random problem solving.
-* Help users focus their preparation on measurable weaknesses.
-* Demonstrate practical use of AI in a real software product.
+* Make competitive programming progress rewarding, visual, and gamified.
+* Eliminate random, unfocused problem solving.
+* Help users focus their preparation on measurable, high-impact bottlenecks.
+* Demonstrate production-grade application of RAG (Retrieval-Augmented Generation) in an ed-tech tool.
 
 ### 2.3 Non-Goals for V1
 
 The first version will **not** attempt to:
 
 * Build a complete LeetCode replacement.
-* Host or execute coding submissions.
-* Build a custom machine-learning model.
-* Build a general-purpose AI chatbot.
-* Support complex social/community features.
-* Implement large-scale distributed infrastructure.
-* Automatically solve programming problems for users.
+* Host or execute code submissions in-browser.
+* Train a custom LLM foundation model from scratch.
+* Build a general-purpose conversational chatbot.
+* Implement complex social networks or multiplayer contests.
+* Automatically write full problem solutions for users.
 
 ---
 
 # 3. Target Users
 
 ### Competitive Programmers
-
-Users who regularly solve problems on platforms such as LeetCode and want better insight into their strengths and weaknesses.
+Users who regularly solve problems on platforms like LeetCode and want objective insights into their accuracy, topic strengths, and submission velocity.
 
 ### Contest Participants
+Users who compete in weekly/biweekly contests and want to diagnose why their contest rating stagnates or drops under time pressure.
 
-Users who participate in programming contests and want to understand recurring contest mistakes.
-
-### Interview Preparation Users
-
-Users preparing for technical interviews who want data-driven topic recommendations instead of randomly choosing problems.
+### Interview Preparation Candidates
+Engineers preparing for top-tier technical interviews who need data-driven topic recommendations rather than blindly grinding random lists.
 
 ---
 
-# 4. Core Product Structure
+# 4. Core Product Structure & Page Flow
 
-LeetBuddy V1 contains three primary sections.
+LeetBuddy is structured into a streamlined, high-impact progression:
 
-## 4.1 Profile Analysis
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              LEETBUDDY FLOW                                 │
+├──────────────────────┬──────────────────────┬───────────────────────────────┤
+│ 1. Dashboard         │ 2. Profile Analysis  │ 3. Practice Weak Topics       │
+│    (Verified Sync)   │    (Gamified Engine) │    (Targeted Problem Ladders) │
+│    [COMPLETED ✅]    │    [COMPLETED ✅]    │    [NEXT IN FLOW ⏳]          │
+├──────────────────────┴──────────────────────┼───────────────────────────────┤
+│ 4. Contest Analysis                         │ 5. Weakness AI (RAG System)   │
+│    (5-Contest Pressure Breakdown)           │    (Grounded Concept Diagnosis)│
+│    [UPCOMING ⏳]                            │    [UPCOMING ⏳]              │
+└─────────────────────────────────────────────┴───────────────────────────────┘
+```
+
+---
+
+## 4.1 Dashboard `[COMPLETED ✅]`
 
 Answers:
+> **"Where do I stand right now, and is my data synced?"**
 
-> **"What kind of programmer am I?"**
+### Implemented Features
+* **Zero-Waste Bio Handshake:** Secure verification via unguessable 12-char alphanumeric token placed in LeetCode "About Me".
+* **Optimized Live Refresh Button:** Real-time sync calling LeetCode GraphQL with a 12s anti-spam cooldown, spinning feedback, relative timestamp (`Just now`, `2m ago`), and dual backend/proxy fallback.
+* **Top Header Profile & Standalone Rank Badge:** Flexbox profile layout displaying user avatar, verification badge, and standalone Grindmaster / Tier rank badge with zero overlapping.
+* **LeetBuddy Points Badge:** Formulaic weighted score:
+  $$\text{Points} = (\text{Easy} \times 1) + (\text{Medium} \times 3) + (\text{Hard} \times 5)$$
+* **12-Month Contribution Heatmap:** 12 structured month clusters (Jan &rarr; Dec) with green activity intensities, active streak counter, and multi-year selector.
+* **Badges Showcase:** Visual display of official LeetCode badges (Knight, Guardian, Annual Challenges).
 
-The section provides an overall view of the user's problem-solving activity.
+---
+
+## 4.2 Profile Analysis `[COMPLETED ✅]`
+
+Answers:
+> **"What kind of programmer am I, and where are my structural bottlenecks?"**
+
+### Implemented Features
+* **AI Hero Card (Gemini 2.5 Flash Lite):**
+  - Generates executive developer persona (e.g., *"Volume-Driven Problem Solver"*).
+  - Identifies root-cause bottlenecks (e.g., *"Dynamic Programming represents 42% of unaccepted submissions"*).
+  - High z-index modal (`z-[9999]`) with backdrop blur, symmetric minimalist actions, on-demand re-analysis, and heuristic fallback.
+* **Progress Mountain & 11-Tier Gamification:**
+  - 11 Competitive Tiers: Newbie (T1) &rarr; Apprentice &rarr; Problem Solver &rarr; Code Crusader &rarr; Algorithm Ace &rarr; Byte Battler &rarr; Grindmaster &rarr; Logic Warlord &rarr; Binary Overlord &rarr; DSA Demigod &rarr; LeetKing (T11).
+  - **Badges Inside the Bars:** Custom high-res rank badges embedded inside each vertical stair bar.
+  - **1.5x Taller Staircase Architecture:** Uniform bar widths with mathematically equal gaps via CSS Grid (`grid-cols-11`).
+  - **Points Range Labels:** Explicit ranges rendered under the mountain axis (`0 - 500`, `501 - 1k`, ..., `10k+`).
+  - **Climber Avatar:** Active rank indicator standing directly on top of the user's current tier bar.
+* **Difficulty & Points Matrix (The "Engine" View):**
+  - Recharts Donut & Pie charts showing Easy vs. Medium vs. Hard distribution.
+  - Live Efficiency Score:
+    $$\text{Efficiency} = \left(\frac{\text{Accepted Submissions}}{\text{Total Submissions}}\right) \times 100$$
+  - Real-time point progression towards the next rank milestone.
+* **Topic Mastery Breakdown (The "Radar Matrix"):**
+  - Recharts 8-cluster Radar / Spider Chart mapping performance across *Arrays, Strings, Trees, Graphs, DP, Greedy, Math, Heap*.
+  - Categorical mastery indicators:
+    - 🟢 **Dominant Topic:** High volume + high accuracy (e.g., Trees – 88%).
+    - 🟡 **Developing Topic:** Moderate volume + average accuracy (e.g., Binary Search – 60%).
+    - 🔴 **Critical Weakness:** High volume + low acceptance rate (e.g., DP – 28%).
+* **Behavioral & Consistency Analysis (Temporal Patterns):**
+  - Recharts Day-of-the-Week Bar Chart identifying peak productivity days vs. high-failure-rate days.
+  - Submission Velocity metrics (average attempts required per accepted solve by difficulty).
+  - Consistency Index tracking active streaks against monthly resilience.
+* **High-Contrast Theme System:** Pure luminous `#ffffff` light mode with complete isolation from sleek dark mode.
+
+---
+
+## 4.3 Practice Weak Topics `[NEXT IN FLOW ⏳]`
+
+Answers:
+> **"What specific ladder of problems should I solve right now to overcome my detected weaknesses?"**
+
+Directly connects the diagnostic findings from Profile Analysis (the 🔴 Critical Weakness tags from the Radar Matrix) into structured, progressive problem ladders.
 
 ### Features
-
-* Contest rating
-* Total problems solved
-* Easy problems solved
-* Medium problems solved
-* Hard problems solved
-* Total submissions
-* Accepted submissions
-* Acceptance rate
-* LeetBuddy Points
-* Topic-wise performance
-* Activity overview
-* Best performing day
-* Worst performing day
-* Basic AI-generated profile insight
-
-### LeetBuddy Points
-
-Points are assigned according to problem difficulty:
-
-| Difficulty | Points |
-| ---------- | -----: |
-| Easy       |      1 |
-| Medium     |      3 |
-| Hard       |      5 |
-
-The total score provides a simple measure of problem-solving volume weighted by difficulty.
-
-### Topic Performance
-
-The system will show performance across supported topics, for example:
-
-* Arrays
-* Strings
-* Binary Search
-* Linked List
-* Trees
-* Graphs
-* Greedy
-* Dynamic Programming
-* Backtracking
-* Stack
-* Queue
-* Heap
-* Math
-
-Topic performance will be calculated from available problem/submission data.
-
-### Activity Analysis
-
-The system will identify:
-
-* Most active day
-* Least active day
-* Problems solved by date
-* Submission activity over time
-
-### AI Profile Insight
-
-The AI receives structured analysis generated by the backend and produces a concise interpretation of the user's profile.
-
-Example:
-
-> Your strongest area is Trees, while Dynamic Programming is currently your weakest major topic. Your activity is also significantly higher on weekdays than weekends.
-
-The AI does not calculate raw statistics itself.
+* **Weakness-to-Practice Routing:** Automatically populates practice queues with topics identified as critical weaknesses (e.g., Dynamic Programming, Graph Traversal).
+* **4-Stage Problem Ladder Progression:**
+  1. **Warm-up:** Foundational pattern recognition problem (Easy / low Medium).
+  2. **Concept Reinforcement:** Core template application problem (Standard Medium).
+  3. **Medium Application:** Edge-case heavy problem requiring state optimization.
+  4. **Advanced Challenge:** Hard-tier problem testing full problem decomposition.
+* **Problem Metadata Cards:** Title, difficulty pill, estimated completion time, relevant concept tag, and direct LeetCode link.
+* **Mastery Progress Tracker:** Live progress meter tracking solved problems in the active practice queue, feeding directly back into the user's Topic Mastery score.
 
 ---
 
-# 5. Contest Analysis
+## 4.4 Contest Analysis `[UPCOMING ⏳]`
 
-Contest Analysis answers:
+Answers:
+> **"What happens to my algorithmic fluency when competing under strict time pressure?"**
 
-> **"What happens when I compete?"**
+Focuses on competitive programming contests where speed, penalty minutes, and first-attempt accuracy determine rating.
 
-This section focuses specifically on competitive programming contests.
+### 4.4.1 Recent Contest Analysis
+* **Metrics:** Contest title, rank, rating delta ($\Delta$), problems attempted, problems solved, and total penalty submissions.
+* **Problem-by-Problem Breakdown:** Performance timeline across Q1, Q2, Q3, Q4.
+* **Failure Classification:** Categorizes unaccepted submissions into:
+  - *Time Limit Exceeded (TLE)* &rarr; Sub-optimal algorithmic complexity.
+  - *Wrong Answer (WA)* &rarr; Overlooked edge cases or integer overflow.
+  - *Runtime Error (RTE)* &rarr; Out-of-bounds indexing or null pointer exceptions.
 
-## 5.1 Recent Contest Analysis
-
-The latest available contest will be analyzed.
-
-### Information Displayed
-
-* Contest name
-* Contest date
-* Contest rank
-* Contest rating
-* Rating change
-* Problems attempted
-* Problems solved
-* Problems failed
-* Submission attempts
-* Performance by problem
-* Topic/tag information where available
-
-### AI Contest Analysis
-
-The AI will analyze structured contest information and identify:
-
-* Recurring weak topics
-* Problem types causing failures
-* Possible conceptual weaknesses
-* Whether the issue appears to be speed, recognition, implementation, or concepts
-* Major patterns in recent performance
-
-Example output:
-
-> You consistently solve the first two problems, but your performance drops when problems require multi-step DP reasoning. This appears to be more of a concept-recognition issue than a speed issue.
+### 4.4.2 Last 5 Contests Trend Analysis
+* **Rating Trajectory:** 5-contest rating curve with rolling performance baseline.
+* **Recurring Failure Patterns:** Flags topics repeatedly missed across contests (e.g., *"Failed DP in 3 of your last 5 contests"*).
+* **Contest Weakness vs. Practice Weakness:** Separates general coding weaknesses from contest-specific panic / speed bottlenecks.
 
 ---
 
-## 5.2 Last 5 Contest Analysis
+## 4.5 Weakness AI [RAG-Based System] `[UPCOMING ⏳]`
 
-LeetBuddy will analyze the user's most recent five contests.
+Answers:
+> **"Why am I failing these specific concepts, and what is the grounded theory I must master?"**
 
-The system will identify patterns such as:
+Unlike standard LLM prompts that guess or hallucinate generic advice, the **Weakness AI is powered by a Retrieval-Augmented Generation (RAG) architecture**.
 
-* Topics repeatedly missed
-* Difficulty levels causing problems
-* Repeated wrong-answer patterns
-* Repeated failure on certain concepts
-* Rating improvement or decline
-* Consistency of performance
-
-### Contest Weakness Example
-
+### 4.5.1 The RAG Architecture
 ```text
-Dynamic Programming
-
-Failed in 3 of your last 5 contests.
-Most failures occurred on Medium/Hard problems.
+┌───────────────────────────┐      ┌───────────────────────────┐
+│ User Performance Evidence │      │  Canonical DSA Knowledge  │
+│ • Failed contest topics   │      │  • State transition rules │
+│ • 42% DP unaccepted rate  │      │  • Graph cycle templates  │
+│ • Specific problem tags   │      │  • Monotonic stack invariants│
+└─────────────┬─────────────┘      └─────────────┬─────────────┘
+              │                                  │
+              └───────────────┬──────────────────┘
+                              ▼
+               ┌───────────────────────────────┐
+               │ RAG Retrieval Engine          │
+               │ (Embeddings & Semantic Search)│
+               └──────────────┬────────────────┘
+                              │
+                              ▼ Relevant Theory Chunks
+               ┌───────────────────────────────┐
+               │ Google Gemini AI Synthesizer  │
+               │ (Grounded In-Context Prompt)  │
+               └──────────────┬────────────────┘
+                              ▼
+               ┌───────────────────────────────┐
+               │ Structured "Why Struggling"   │
+               │ + Concept Remediation Cards   │
+               └───────────────────────────────┘
 ```
 
-The AI can then explain the pattern in user-friendly language.
+### 4.5.2 "Why You're Struggling" Diagnostic Engine
+For each detected weakness, the RAG system retrieves targeted concept chunks and synthesizes an evidence-based diagnosis:
+* **State Definition Breakdown:** Pinpoints whether the user fails to define $dp[i]$ or $dp[i][j]$ state semantics.
+* **Transition Logic Diagnosis:** Explains why greedy or brute-force approaches fail on the identified problem class.
+* **Recognition Bottlenecks:** Clarifies how to spot problem triggers in problem statements.
+
+### 4.5.3 Focused Theory & Missed Concept Learning
+* Concise, grounded theoretical explanations retrieved directly from canonical DSA knowledge bases.
+* Code templates, invariant checklists, and common trap patterns.
+* Distinguishes between broad topic weakness (e.g., *Dynamic Programming*) versus specific sub-concept weakness (e.g., *0/1 Knapsack State Compression*).
 
 ---
 
-# 6. Weakness Center
+# 5. AI Responsibilities & Architecture
 
-The Weakness Center is the core personalized-learning feature of LeetBuddy.
+LeetBuddy strictly adheres to:
+> **Backend calculates facts. RAG retrieves grounded theory. AI interprets and teaches.**
 
-It answers:
+### Profile Analysis (Gemini 2.5 Flash Lite)
+* Synthesizes high-level persona and executive summary.
+* Highlights primary strengths and primary conceptual bottlenecks.
+* Multi-model fallback waterfall with heuristic rule engine guarantee.
 
-> **"Why am I weak, and what should I do about it?"**
+### Weakness AI [RAG-Based System]
+* Ingests user failure signals (submission velocity, unaccepted tags, contest drops).
+* Queries vector/document store for canonical DSA theory chunks.
+* Synthesizes structured "Why You're Struggling" breakdowns.
+* Generates concept-specific remediation without generic advice.
 
-The section is divided into:
-
-1. General Weakness
-2. Contest Weakness
-
----
-
-## 6.1 General Weakness
-
-General Weakness is determined from the user's overall problem-solving history.
-
-### Example
-
-```text
-Dynamic Programming     🔴
-Greedy                  🟠
-Graphs                  🟡
-```
-
-The system may rank weaknesses using factors such as:
-
-* Accuracy
-* Number of failed problems
-* Recent performance
-* Difficulty-adjusted performance
-* Number of attempts
-* Topic frequency
+### What AI NEVER Does
+* AI never counts total submissions, acceptance rate, or beats percentiles.
+* AI never invents user performance metrics.
+* Core statistics always originate from application logic and MongoDB.
 
 ---
 
-## 6.2 Contest Weakness
+# 6. Technical Specifications
 
-Contest Weakness is generated from recent contest performance.
+### Frontend
+* **Core:** React 18, Vite, React Router 7.
+* **Styling:** Tailwind CSS v4, pure `#ffffff` light mode and dark mode theme tokens.
+* **Data Visualization:** Recharts (Donut/Pie charts, 8-cluster RadarChart, Day-of-Week BarChart), CSS Grid/Flex for 52-week heatmaps and 11-Tier Mountain stairs.
+* **Icons:** `lucide-react`.
 
-Example:
+### Backend
+* **Runtime:** Node.js (v20+), Express.js (v5.x), ES Modules.
+* **Database:** MongoDB Atlas, Mongoose ODM.
+* **Authentication:** JWT (JSON Web Tokens), HTTP-only cookies, password hashing with bcrypt.
+* **External Integration:** LeetCode GraphQL public endpoint (zero-waste query architecture).
 
-```text
-Dynamic Programming
-
-3 failed attempts across recent contests.
-Repeated difficulty in state-based problems.
-```
-
-General Weakness and Contest Weakness may overlap, but they represent different sources of evidence.
-
----
-
-# 7. "Why You're Struggling"
-
-For each major weakness, LeetBuddy will generate a structured explanation.
-
-This will be one of the main AI-powered features.
-
-### Example
-
-```text
-Dynamic Programming
-
-WHY YOU'RE STRUGGLING
-
-1. State Definition
-   You frequently struggle to define what dp[i]
-   or dp[i][j] should represent.
-
-2. Transition
-   Your failed attempts often use an incorrect
-   relationship between the current and previous states.
-
-3. Problem Recognition
-   You sometimes continue with brute force or
-   greedy approaches before identifying the DP structure.
-```
-
-The explanation must be based on available user evidence and should avoid presenting unsupported assumptions as facts.
+### AI & RAG Infrastructure
+* **LLM:** Google Gemini 2.5 Flash Lite (`@google/genai` SDK) with structured JSON schema output mode (`responseMimeType: "application/json"`).
+* **RAG Knowledge Store:** Curated markdown knowledge base of canonical DSA concepts, patterns, invariants, and templates.
+* **Embedding & Retrieval Pipeline:** Semantic document chunking and vector similarity matching for concept retrieval.
 
 ---
 
-# 8. Personalized Learning
-
-Once a weakness is identified, the user can enter a learning flow.
-
-## 8.1 General Theory
-
-The user receives concise theoretical material covering the relevant topic.
-
-Example:
+# 7. Updated V1 Development Phases
 
 ```text
-Dynamic Programming
-
-What is DP?
-When should DP be used?
-How do you identify a state?
-How do you create a transition?
+PHASE 1: Foundation & Verified Dashboard       [COMPLETED ✅]
+PHASE 2: Profile Analysis & AI Hero Card       [COMPLETED ✅]
+PHASE 3: Practice Weak Topics                  [IN QUEUE ⏳ - CURRENT]
+PHASE 4: Contest Analysis                      [IN QUEUE ⏳]
+PHASE 5: Weakness AI [RAG-Based System]        [IN QUEUE ⏳]
+PHASE 6: Similar Problems & Recommendation     [PLANNED]
+PHASE 7: Polish, Integration & Deployment      [PLANNED]
 ```
 
-The V1 goal is focused learning rather than generating an entire course.
+### Phase 1: Foundation & Verified Dashboard `[COMPLETED ✅]`
+* Express backend with JWT auth, MongoDB Atlas connection, and session handling.
+* Zero-waste LeetCode verification handshake via `aboutMe` token match.
+* Full Dashboard with 12-Month Contribution Heatmap (Jan &rarr; Dec), active streaks, active days, badge showcase.
+* **Live Sync / Refresh Button:** Embedded to the left of LeetBuddy points with 12s anti-spam cooldown, spinning feedback, and dual backend/proxy fallback.
+* Luminous `#ffffff` light mode and dark mode separation.
+
+### Phase 2: Profile Analysis & AI Hero Card `[COMPLETED ✅]`
+* **AI Hero Card:** Gemini 2.5 Flash Lite persona synthesis, strengths, bottleneck diagnosis, and modal with z-[9999] overlay.
+* **Progress Mountain:** 11-Tier gamified staircase (Newbie to LeetKing), badges embedded inside bars, 1.5x taller bars, uniform CSS Grid spacing, points range labels (`0 - 500` to `10k+`), climber avatar.
+* **Difficulty & Points Matrix:** Recharts Donut charts, live Efficiency Score, distance to next tier milestone.
+* **Topic Mastery Radar Matrix:** 8-cluster RadarChart with 🟢 Dominant, 🟡 Developing, 🔴 Critical Weakness categorization tags.
+* **Behavioral & Consistency Analysis:** Weekday velocity vs failure bar chart, 52-week heatmap, consistency index.
+
+### Phase 3: Practice Weak Topics `[NEXT IN FLOW ⏳]`
+* **Weakness-to-Practice Pipeline:** Automatically routes detected weak topics from Profile Analysis into practice queues.
+* **4-Stage Practice Ladders:** Warm-up &rarr; Concept Reinforcement &rarr; Medium Application &rarr; Advanced Challenge.
+* **Problem Cards & Metadata:** Difficulty, estimated solve time, relevant concept tag, direct problem link.
+* **Practice Queue Progress Tracker:** Real-time completion tracker updating Topic Mastery scores.
+
+### Phase 4: Contest Analysis `[UPCOMING ⏳]`
+* Ingestion of recent contest metrics (rank, rating delta, problems solved/failed, penalty attempts).
+* 5-Contest historical trend analysis with rolling performance baseline.
+* Contest failure pattern classification (TLE vs WA vs RTE, speed vs concept vs implementation).
+* Contest-specific weakness identification.
+
+### Phase 5: Weakness AI [RAG-Based System] `[UPCOMING ⏳]`
+* **RAG Knowledge Base:** Curation of structured DSA concepts, state transition formulas, and algorithmic invariant templates.
+* **Retrieval Pipeline:** Semantic retrieval matching user failure logs with exact theoretical concepts without hallucination.
+* **"Why You're Struggling" Engine:** Grounded breakdown of state definition, transition, and problem recognition errors.
+* **Focused Concept Remediation:** Tailored mini-lessons and action directives grounded in retrieved theory.
+
+### Phase 6: Similar Problems & Intelligent Recommendation `[PLANNED]`
+* Difficulty-adaptive problem recommendations matching user's diagnosed RAG weakness.
+* Problem cross-referencing across LeetCode, Codeforces, and GeeksforGeeks.
+* Progression ladders validating conceptual improvement.
+
+### Phase 7: Polish, Integration & Deployment `[PLANNED]`
+* Full cross-page data flow testing (Dashboard &rarr; Profile &rarr; Practice &rarr; Contest &rarr; Weakness RAG).
+* API rate-limiting, error boundaries, and performance optimization.
+* Production deployment on cloud infrastructure (Vercel / Render / Atlas).
+* Comprehensive documentation and interview showcase guide.
 
 ---
 
-## 8.2 Missed Concept Learning
-
-The system should distinguish between:
-
-* Weakness in an entire topic
-* Weakness in a specific concept
-
-Example:
+# 8. User Flow
 
 ```text
-Topic:
-Dynamic Programming
-
-Specific Concept:
-2D State Definition
-```
-
-The AI explains the concept relevant to the user's weakness.
-
----
-
-# 9. Similar Problems
-
-The system recommends problems that match the user's current weakness.
-
-Potential sources:
-
-* LeetCode
-* GeeksforGeeks
-* Codeforces
-
-Each recommendation should contain:
-
-* Problem title
-* Platform
-* Difficulty
-* Topic
-* Relevant concept
-* Problem link
-
-### Recommendation Progression
-
-Recommendations should generally progress from easier reinforcement toward harder application.
-
-Example:
-
-```text
-1. Warm-up
-2. Concept reinforcement
-3. Medium application
-4. Advanced challenge
-```
-
-V1 recommendations may primarily use structured problem metadata and deterministic filtering, with AI assisting in selecting or explaining recommendations.
-
----
-
-# 10. AI Responsibilities in V1
-
-AI is an integrated component of the three sections, not a separate product section.
-
-## AI will be used for:
-
-### Profile Analysis
-
-* Summarize important profile patterns
-* Explain major strengths and weaknesses
-* Generate human-readable insights
-
-### Contest Analysis
-
-* Interpret recent contest performance
-* Explain recurring failure patterns
-* Distinguish likely conceptual vs performance issues
-* Summarize the last five contests
-
-### Weakness Center
-
-* Explain why the user may be struggling
-* Explain specific concepts
-* Generate focused learning material
-* Help prioritize practice
-* Personalize problem recommendations
-
----
-
-# 11. AI Architecture Principle
-
-LeetBuddy V1 will follow:
-
-> **Backend calculates facts. AI interprets facts.**
-
-Example:
-
-```text
-User Data
-   ↓
-Backend Processing
-   ↓
-Structured Analysis
-   ↓
-AI
-   ↓
-Human-readable Insight
-```
-
-The AI should not be responsible for calculating core statistics such as:
-
-* Total submissions
-* Contest rating
-* Acceptance rate
-* Number of solved problems
-* Topic counts
-
-These values should come from application logic and stored data.
-
----
-
-# 12. Technical Specifications
-
-## 12.1 Frontend
-
-* React
-* Vite
-* Tailwind CSS
-* React Router
-* Charting library such as Recharts
-
-## 12.2 Backend
-
-* Node.js
-* Express.js
-* REST API
-* Mongoose
-
-## 12.3 Database
-
-* MongoDB
-* MongoDB Atlas for hosted deployment
-
-## 12.4 Authentication
-
-* JWT
-* HTTP-only cookies
-* Password hashing using bcrypt
-
-## 12.5 AI
-
-One supported LLM provider for V1, such as:
-
-* Google Gemini API
-* OpenAI API
-
-The provider should be accessed from the backend rather than directly from the frontend.
-
----
-
-# 13. Initial Data Model
-
-The exact schema may evolve during implementation, but V1 will conceptually contain:
-
-### User
-
-```text
-_userId
-username
-email
-password
-platformUsername
-createdAt
-updatedAt
-```
-
-### Problem
-
-```text
-problemId
-title
-platform
-difficulty
-topics
-url
-```
-
-### Submission
-
-```text
-submissionId
-userId
-problemId
-status
-language
-timestamp
-```
-
-### Contest
-
-```text
-contestId
-name
-date
-rank
-ratingBefore
-ratingAfter
-ratingChange
-```
-
-### Contest Performance
-
-```text
-contestId
-problemId
-attempts
-status
-topics
-time
-```
-
-### Analysis
-
-```text
-userId
-type
-weakTopics
-strengths
-insights
-generatedAt
-```
-
-### Learning Content
-
-```text
-topic
-concept
-theory
-recommendedProblems
+First-Time User:
+Register ──► Bio Token Handshake ──► Data Ingestion ──► Dashboard ──► Profile Analysis
+
+Returning User Core Loop:
+Dashboard (Live Sync)
+      │
+      ▼
+Profile Analysis (Diagnose Strengths & 🔴 Critical Weaknesses)
+      │
+      ▼
+Practice Weak Topics (4-Stage Targeted Problem Ladders)
+      │
+      ▼
+Contest Analysis (Evaluate Performance Under Time Pressure)
+      │
+      ▼
+Weakness AI [RAG-Based System] (Grounded "Why You're Struggling" & Concept Remediation)
+      │
+      ▼
+Re-analyze & Track Tier Progression on Progress Mountain
 ```
 
 ---
 
-# 14. API Structure
-
-The exact endpoints may change during development, but the V1 API should follow a clear versioned structure.
-
-### Authentication
-
-`/api/v1/auth/`
-
-* `POST /register`
-* `POST /login`
-* `POST /logout`
-* `GET /me`
-
-### Profile
-
-`/api/v1/profile/`
-
-* `GET /`
-* `GET /stats`
-* `GET /topics`
-* `GET /activity`
-* `GET /insights`
-
-### Contest
-
-`/api/v1/contests/`
-
-* `GET /`
-* `GET /recent`
-* `GET /:contestId`
-* `GET /analysis`
-* `GET /analysis/recent`
-
-### Weakness
-
-`/api/v1/weakness/`
-
-* `GET /`
-* `GET /general`
-* `GET /contest`
-* `GET /:topic`
-* `GET /:topic/learning`
-* `GET /:topic/problems`
-
-### AI
-
-`/api/v1/ai/`
-
-* `POST /profile-insight`
-* `POST /contest-analysis`
-* `POST /weakness-analysis`
-* `POST /learning-content`
-
-AI endpoints should only receive the minimum structured information required to generate the requested output.
-
----
-
-# 15. Security Requirements
-
-* Passwords must never be stored in plain text.
-* JWT secrets must be stored in environment variables.
-* AI API keys must never be exposed to the frontend.
-* Input validation must be applied to API requests.
-* Authentication middleware must protect private resources.
-* Rate limiting should be applied to expensive AI endpoints.
-* User-specific analysis data must only be accessible to the authenticated owner.
-* Sensitive configuration must be stored in environment variables.
-* CORS must be configured for approved frontend origins.
-
----
-
-# 16. Performance Requirements
-
-V1 should remain responsive under normal personal-project usage.
-
-### Requirements
-
-* Avoid repeated external data requests when existing data can be reused.
-* Store generated analysis when appropriate.
-* Avoid calling AI repeatedly for identical analysis.
-* Use database indexes for frequently queried fields.
-* Keep expensive AI operations isolated from normal page requests where practical.
-
-V1 does not require distributed systems or microservices.
-
----
-
-# 17. User Flow
-
-### First-Time User
-
-```text
-Register
-   ↓
-Connect / enter programming platform username
-   ↓
-Fetch available data
-   ↓
-Process profile
-   ↓
-Generate initial analysis
-   ↓
-Dashboard
-```
-
-### Normal User
-
-```text
-Login
-   ↓
-Profile Analysis
-   ↓
-Contest Analysis
-   ↓
-Weakness Center
-   ↓
-Learn Concept
-   ↓
-Practice Similar Problems
-   ↓
-Return later
-   ↓
-Re-analyze performance
-```
-
----
-
-# 18. User Interface Structure
-
-## Main Navigation
-
-```text
-LeetBuddy
-
-Dashboard
-Profile Analysis
-Contest Analysis
-Weakness Center
-```
-
-### Profile Analysis
-
-```text
-Overview
-Difficulty Distribution
-Topic Performance
-Activity
-AI Insight
-```
-
-### Contest Analysis
-
-```text
-Recent Contest
-Last 5 Contests
-Performance
-Recurring Weaknesses
-AI Analysis
-```
-
-### Weakness Center
-
-```text
-General Weakness
-Contest Weakness
-
-Selected Weakness
-   ↓
-Why You're Struggling
-   ↓
-Learn
-   ↓
-Similar Problems
-```
-
----
-
-# 19. V1 Development Phases
-
-## Phase 1: Foundation
-
-* Project setup
-* React frontend
-* Express backend
-* MongoDB connection
-* Authentication
-* Basic application layout
-
-## Phase 2: Profile Analysis
-
-* User/platform data ingestion
-* Problem statistics
-* Difficulty statistics
-* Submission statistics
-* Topic statistics
-* Activity analysis
-* Profile dashboard
-
-## Phase 3: Contest Analysis
-
-* Contest data
-* Recent contest view
-* Last five contests
-* Contest statistics
-* Contest weakness calculation
-
-## Phase 4: Weakness Center
-
-* General weakness calculation
-* Contest weakness calculation
-* Weakness ranking
-* Weakness detail pages
-
-## Phase 5: AI Integration
-
-* AI profile insights
-* AI contest analysis
-* "Why You're Struggling"
-* Concept explanations
-* Personalized learning content
-
-## Phase 6: Similar Problems
-
-* Problem metadata
-* Problem filtering
-* Difficulty progression
-* Platform links
-* Personalized recommendation flow
-
-## Phase 7: Polish & Deployment
-
-* UI refinement
-* Error handling
-* Loading states
-* API validation
-* Security review
-* Performance optimization
-* Deployment
-* Documentation
-
----
-
-# 20. Success Criteria
-
-LeetBuddy V1 will be considered successful when a user can:
-
-1. Create an account and connect their programming profile.
-2. View a meaningful profile analysis.
-3. View recent contest performance.
-4. View a five-contest performance summary.
-5. See their general weaknesses.
-6. See their contest-specific weaknesses.
-7. Understand why a major weakness has been identified.
-8. Learn the relevant concept.
-9. Receive suitable similar problems.
-10. Return later and compare whether the weakness has improved.
-
-### Product Success Test
-
-The most important test is:
-
-> **Can LeetBuddy turn a user's historical competitive programming data into a clear next action?**
-
-A successful V1 should allow the user to go from:
-
-```text
-"I am bad at DP."
-```
-
-to:
-
-```text
-"Here is specifically what I am bad at,
-here is why,
-here is what I should learn,
-and here are the problems I should solve next."
-```
-
----
-
-# 21. V1 Product Principle
-
-LeetBuddy should remain focused on one core loop:
-
-```text
-ANALYZE
-   ↓
-IDENTIFY WEAKNESS
-   ↓
-EXPLAIN
-   ↓
-LEARN
-   ↓
-PRACTICE
-   ↓
-ANALYZE AGAIN
-```
-
-The three-section architecture remains the foundation for future versions.
-
-Future versions can improve the intelligence, data sources, recommendation engine, scalability, and personalization **without changing the fundamental product structure**.
+# 9. Success Criteria
+
+LeetBuddy will be considered successful when a competitive programmer can:
+
+1. Connect their LeetCode profile securely in under 30 seconds.
+2. View an objective, gamified profile analysis with AI persona and 11-tier mountain progression.
+3. Refresh their live LeetCode stats on-demand with a single click.
+4. Immediately transition from identified weaknesses into a **4-stage practice problem ladder**.
+5. Analyze recent contest performance to detect time-pressure failure patterns.
+6. Receive an evidence-based, **RAG-grounded explanation** of *why* they struggle on specific concepts (e.g. 2D DP state transitions).
+7. Complete targeted practice and visually observe their tier climb up the Progress Mountain.
+
+> **Ultimate Product Success Test:**
+> Can LeetBuddy transform a vague complaint like *"I suck at Dynamic Programming"* into a precise diagnostic action:
+> *"Here is your exact bottleneck: State Transition in Multi-Dimensional DP (42% failure rate). Here is the retrieved concept theory, and here is your 4-problem practice ladder to solve it."*

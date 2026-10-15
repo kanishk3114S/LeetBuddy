@@ -135,7 +135,4 @@ Required JSON Schema:
     return createFallbackHeroCard(profileData);
 }
 
-/**
- * Algorithmic fallback if external AI call is unavailable
- */
 

@@ -42,7 +42,7 @@ export default function Dashboard() {
         {/* Content area */}
         <div className="flex flex-1 flex-col overflow-hidden">
           {stats ? (
-            <StatsView stats={stats} />
+            <StatsView stats={stats} onStatsUpdate={handleVerified} />
           ) : (
             <VerifyFlow onVerified={handleVerified} />
           )}

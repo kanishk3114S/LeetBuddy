@@ -3,7 +3,6 @@ import Sidebar from '../components_dashboard/Sidebar.jsx'
 import DashHeader from '../components_dashboard/DashHeader.jsx'
 import ProgressMountain from '../components_profileAnalyses/ProgressMountain.jsx'
 import DifficultyPointsMatrix from '../components_profileAnalyses/DifficultyPointsMatrix.jsx'
-import TopicMasteryMatrix from '../components_profileAnalyses/TopicMasteryMatrix.jsx'
 import BehavioralConsistencyAnalysis from '../components_profileAnalyses/BehavioralConsistencyAnalysis.jsx'
 
 export default function ProfileAnalysis() {
@@ -36,7 +35,7 @@ export default function ProfileAnalysis() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <DashHeader user={user} stats={stats} />
 
-        {/* Content View with 4 Core Profile Analytics Containers */}
+        {/* Content View with Core Profile Analytics Containers */}
         <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
           {/* Container 1: Progress Mountain & Floating Hero Card */}
           <ProgressMountain leetBuddyPoints={leetBuddyPoints} stats={stats} />
@@ -44,10 +43,7 @@ export default function ProfileAnalysis() {
           {/* Container 2: Difficulty & Points Matrix (The "Engine" View) */}
           <DifficultyPointsMatrix stats={stats} />
 
-          {/* Container 3: Topic Mastery Breakdown (The Radar Matrix) */}
-          <TopicMasteryMatrix stats={stats} />
-
-          {/* Container 4: Behavioral & Consistency Analysis (Temporal Patterns) */}
+          {/* Container 3: Behavioral & Consistency Analysis (Temporal Patterns) */}
           <BehavioralConsistencyAnalysis stats={stats} />
         </div>
       </div>

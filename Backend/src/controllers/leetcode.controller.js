@@ -415,6 +415,8 @@ export const getOrGenerateHeroCard = async (req, res) => {
             return res.status(400).json({ error: "Profile stats are required to generate an AI Hero Card" });
         }
 
+        //ai function//
+
         const heroCard = await generateHeroCard({
             ...targetData,
             username: username || targetData?.username || targetData?.profile?.realName || "Developer"
@@ -432,5 +434,258 @@ export const getOrGenerateHeroCard = async (req, res) => {
     } catch (error) {
         console.error("Error in getOrGenerateHeroCard:", error);
         return res.status(500).json({ error: "Failed to generate AI Hero Card" });
+    }
+};
+
+/**
+ * Controller to refresh/sync LeetCode stats on-demand from the Dashboard
+ * POST /api/leetcode/refresh
+ */
+export const refreshLeetCodeStats = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        let username = req.body?.username;
+
+        // If authenticated, get username from user document if not explicitly passed
+        if (userId) {
+            const user = await userModel.findById(userId);
+            if (!username && user?.leetcode?.username) {
+                username = user.leetcode.username;
+            }
+
+            // Cooldown check (10 seconds) to prevent LeetCode rate limits / IP abuse
+            const lastSynced = user?.leetcode?.lastSynced;
+            if (lastSynced && !req.query?.force) {
+                const elapsedMs = Date.now() - new Date(lastSynced).getTime();
+                if (elapsedMs < 10000) {
+                    const waitSec = Math.ceil((10000 - elapsedMs) / 1000);
+                    return res.status(429).json({
+                        error: `Please wait ${waitSec}s before refreshing again.`,
+                        cooldownSeconds: waitSec
+                    });
+                }
+            }
+        }
+
+        if (!username) {
+            return res.status(400).json({ error: "LeetCode username is required to refresh stats" });
+        }
+
+        // Fetch fresh stats from LeetCode GraphQL
+        const statsQuery = `
+            query getUserFullStats($username: String!) {
+                allQuestionsCount {
+                    difficulty
+                    count
+                }
+                matchedUser(username: $username) {
+                    profile {
+                        ranking
+                        userAvatar
+                        realName
+                        aboutMe
+                    }
+                    problemsSolvedBeatsStats {
+                        difficulty
+                        percentage
+                    }
+                    submitStatsGlobal {
+                        acSubmissionNum { difficulty count submissions }
+                        totalSubmissionNum { difficulty count submissions }
+                    }
+                    userCalendar {
+                        activeYears
+                        streak
+                        totalActiveDays
+                        submissionCalendar
+                    }
+                    activeBadge {
+                        id
+                        name
+                        displayName
+                        icon
+                    }
+                    badges {
+                        id
+                        name
+                        shortName
+                        displayName
+                        icon
+                        hoverText
+                        creationDate
+                        category
+                    }
+                    tagProblemCounts {
+                        fundamental { tagName problemsSolved }
+                        intermediate { tagName problemsSolved }
+                        advanced { tagName problemsSolved }
+                    }
+                }
+            }
+        `;
+
+        const statsRes = await fetch("https://leetcode.com/graphql", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Referer": "https://leetcode.com" },
+            body: JSON.stringify({ query: statsQuery, variables: { username } })
+        });
+
+        if (!statsRes.ok) {
+            return res.status(statsRes.status).json({ error: "Failed to fetch updated data from LeetCode" });
+        }
+
+        const statsData = await statsRes.json();
+        const userData = statsData?.data?.matchedUser;
+        if (!userData) {
+            return res.status(404).json({ error: `LeetCode user "${username}" was not found` });
+        }
+
+        const allQuestionsList = statsData?.data?.allQuestionsCount || [];
+        const allQuestionsCount = {
+            all: allQuestionsList.find(x => x.difficulty === "All")?.count || 0,
+            easy: allQuestionsList.find(x => x.difficulty === "Easy")?.count || 0,
+            medium: allQuestionsList.find(x => x.difficulty === "Medium")?.count || 0,
+            hard: allQuestionsList.find(x => x.difficulty === "Hard")?.count || 0
+        };
+
+        const acList = userData?.submitStatsGlobal?.acSubmissionNum || userData?.submitStats?.acSubmissionNum || [];
+        const totalSolved = acList.find(x => x.difficulty === "All")?.count || 0;
+        const easySolved = acList.find(x => x.difficulty === "Easy")?.count || 0;
+        const mediumSolved = acList.find(x => x.difficulty === "Medium")?.count || 0;
+        const hardSolved = acList.find(x => x.difficulty === "Hard")?.count || 0;
+
+        const totalSubList = userData?.submitStatsGlobal?.totalSubmissionNum || userData?.submitStats?.totalSubmissionNum || [];
+        const acceptedSubmissions = acList.find(x => x.difficulty === "All")?.submissions || 0;
+        const totalSubmissions = totalSubList.find(x => x.difficulty === "All")?.submissions || 0;
+        const acceptanceRate = totalSubmissions > 0 ? Number(((acceptedSubmissions / totalSubmissions) * 100).toFixed(1)) : 0;
+
+        const beatsList = userData?.problemsSolvedBeatsStats || [];
+        const beatsStats = {
+            easy: beatsList.find(x => x.difficulty === "Easy")?.percentage || 0,
+            medium: beatsList.find(x => x.difficulty === "Medium")?.percentage || 0,
+            hard: beatsList.find(x => x.difficulty === "Hard")?.percentage || 0
+        };
+
+        const leetBuddyPoints = (easySolved * 1) + (mediumSolved * 3) + (hardSolved * 5);
+
+        const solvedMap = new Map();
+        const userTags = [
+            ...(userData?.tagProblemCounts?.fundamental || []).map(t => ({ ...t, category: "fundamental" })),
+            ...(userData?.tagProblemCounts?.intermediate || []).map(t => ({ ...t, category: "intermediate" })),
+            ...(userData?.tagProblemCounts?.advanced || []).map(t => ({ ...t, category: "advanced" }))
+        ];
+
+        userTags.forEach(t => {
+            solvedMap.set(t.tagName.toLowerCase(), {
+                problemsSolved: t.problemsSolved,
+                category: t.category
+            });
+        });
+
+        const topics = ALL_LEETCODE_TOPICS.map(topic => {
+            const found = solvedMap.get(topic.tagName.toLowerCase());
+            return {
+                tagName: topic.tagName,
+                category: topic.category,
+                problemsSolved: found ? found.problemsSolved : 0
+            };
+        });
+
+        userTags.forEach(t => {
+            if (!topics.some(existing => existing.tagName.toLowerCase() === t.tagName.toLowerCase())) {
+                topics.push({
+                    tagName: t.tagName,
+                    category: t.category,
+                    problemsSolved: t.problemsSolved
+                });
+            }
+        });
+
+        const parsedCalendar = JSON.parse(userData?.userCalendar?.submissionCalendar || "{}");
+        let bestPerformingDay = null;
+        let maxSubmissionsOnDay = 0;
+
+        for (const [timestamp, count] of Object.entries(parsedCalendar)) {
+            if (count > maxSubmissionsOnDay) {
+                maxSubmissionsOnDay = count;
+                bestPerformingDay = {
+                    date: new Date(Number(timestamp) * 1000),
+                    submissionCount: count
+                };
+            }
+        }
+
+        const badges = (userData?.badges || []).map(b => ({
+            id: b.id,
+            name: b.displayName || b.shortName || b.name,
+            icon: b.icon?.startsWith("http") ? b.icon : (b.icon ? `https://leetcode.com${b.icon}` : ""),
+            category: b.category || "",
+            creationDate: b.creationDate ? new Date(b.creationDate) : null
+        }));
+
+        const activeBadge = userData?.activeBadge ? {
+            id: userData.activeBadge.id,
+            name: userData.activeBadge.displayName || userData.activeBadge.name,
+            icon: userData.activeBadge.icon?.startsWith("http") ? userData.activeBadge.icon : (userData.activeBadge.icon ? `https://leetcode.com${userData.activeBadge.icon}` : "")
+        } : (badges.length > 0 ? badges[0] : null);
+
+        const profileMeta = {
+            ranking: userData?.profile?.ranking || 0,
+            userAvatar: userData?.profile?.userAvatar || "",
+            realName: userData?.profile?.realName || "",
+            aboutMe: userData?.profile?.aboutMe || ""
+        };
+
+        const updatePayload = {
+            stats: {
+                totalSolved,
+                easySolved,
+                mediumSolved,
+                hardSolved,
+                totalSubmissions,
+                acceptedSubmissions,
+                acceptanceRate,
+                leetBuddyPoints
+            },
+            allQuestionsCount,
+            beatsStats,
+            profile: profileMeta,
+            activeBadge,
+            topics,
+            badges,
+            activity: {
+                currentStreak: userData?.userCalendar?.streak || 0,
+                totalActiveDays: userData?.userCalendar?.totalActiveDays || 0,
+                activeYears: userData?.userCalendar?.activeYears || [],
+                bestPerformingDay
+            },
+            submissionCalendar: parsedCalendar
+        };
+
+        let updatedProfile = null;
+        if (userId) {
+            updatedProfile = await profileDataModel.findOneAndUpdate(
+                { userId },
+                { $set: updatePayload },
+                { upsert: true, new: true }
+            );
+
+            await userModel.findByIdAndUpdate(userId, {
+                $set: { "leetcode.lastSynced": new Date() }
+            });
+        } else {
+            updatedProfile = updatePayload;
+        }
+
+        return res.status(200).json({
+            message: "LeetCode stats refreshed successfully!",
+            username,
+            profile: updatedProfile,
+            lastSynced: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error("Error refreshing LeetCode stats:", error);
+        return res.status(500).json({ error: "Failed to refresh stats from LeetCode" });
     }
 };
