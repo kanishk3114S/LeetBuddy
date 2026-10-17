@@ -2,12 +2,7 @@ import { useMemo } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { calculateRank, RANKS_LIST } from '../utils/rankings.js'
 import { Zap, Target, TrendingUp } from 'lucide-react'
-
-const DIFFICULTY_COLORS = {
-  Easy: '#10B981',
-  Medium: '#F59E0B',
-  Hard: '#EF4444'
-}
+import { useTheme } from '../hooks/useTheme.js'
 
 // Custom Recharts Tooltip for the Donut Chart
 function CustomPieTooltip({ active, payload }) {
@@ -32,6 +27,14 @@ function CustomPieTooltip({ active, payload }) {
 }
 
 export default function DifficultyPointsMatrix({ stats }) {
+  const { isDarkMode } = useTheme()
+
+  const diffColors = useMemo(() => ({
+    Easy: isDarkMode ? '#34d399' : '#10b981',
+    Medium: isDarkMode ? '#fbbf24' : '#f59e0b',
+    Hard: isDarkMode ? '#f87171' : '#ef4444'
+  }), [isDarkMode])
+
   // Normalize data from backend res.json()
   const data = useMemo(() => {
     const profile = stats?.profile || stats || {}
@@ -85,7 +88,7 @@ export default function DifficultyPointsMatrix({ stats }) {
         value: easySolved,
         total: easyTotal,
         percentage: totalSolved > 0 ? ((easySolved / totalSolved) * 100).toFixed(1) : 0,
-        color: DIFFICULTY_COLORS.Easy,
+        color: diffColors.Easy,
         beats: getBeats('Easy') || '88.4'
       },
       {
@@ -93,7 +96,7 @@ export default function DifficultyPointsMatrix({ stats }) {
         value: mediumSolved,
         total: mediumTotal,
         percentage: totalSolved > 0 ? ((mediumSolved / totalSolved) * 100).toFixed(1) : 0,
-        color: DIFFICULTY_COLORS.Medium,
+        color: diffColors.Medium,
         beats: getBeats('Medium') || '92.1'
       },
       {
@@ -101,7 +104,7 @@ export default function DifficultyPointsMatrix({ stats }) {
         value: hardSolved,
         total: hardTotal,
         percentage: totalSolved > 0 ? ((hardSolved / totalSolved) * 100).toFixed(1) : 0,
-        color: DIFFICULTY_COLORS.Hard,
+        color: diffColors.Hard,
         beats: getBeats('Hard') || '79.5'
       }
     ]
@@ -125,7 +128,7 @@ export default function DifficultyPointsMatrix({ stats }) {
       pointsToNext,
       pieData
     }
-  }, [stats])
+  }, [stats, diffColors])
 
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-5 sm:p-6 shadow-xs dark:border-neutral-800 dark:bg-neutral-900 transition-colors">
@@ -160,7 +163,7 @@ export default function DifficultyPointsMatrix({ stats }) {
       {/* ── Main 3-Column Engine Grid ── */}
       <div className="mt-5 grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         {/* Column 1: Donut Chart with Center Total Solved (5 Cols) */}
-        <div className="lg:col-span-5 flex flex-col justify-between rounded-xl border border-neutral-200/90 bg-neutral-50/80 p-4 dark:border-neutral-800/60 dark:bg-neutral-950/40">
+        <div className="lg:col-span-5 flex flex-col justify-between rounded-xl border border-neutral-200/90 bg-neutral-50/80 p-4 dark:border-neutral-800/60 dark:bg-neutral-950/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs">
           <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 block mb-1">
             Difficulty Ratio Distribution
           </span>
@@ -217,7 +220,7 @@ export default function DifficultyPointsMatrix({ stats }) {
         </div>
 
         {/* Column 2: Breakdown Bars & Beats Percentiles (4 Cols) */}
-        <div className="lg:col-span-4 flex flex-col justify-between rounded-xl border border-neutral-200/90 bg-neutral-50/80 p-4 space-y-4 dark:border-neutral-800/60 dark:bg-neutral-950/40">
+        <div className="lg:col-span-4 flex flex-col justify-between rounded-xl border border-neutral-200/90 bg-neutral-50/80 p-4 space-y-4 dark:border-neutral-800/60 dark:bg-neutral-950/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs">
           <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 block">
             Category Breakdown & Pool Beats
           </span>
@@ -275,7 +278,7 @@ export default function DifficultyPointsMatrix({ stats }) {
         </div>
 
         {/* Column 3: LeetBuddy Point Progression & Milestones (3 Cols) */}
-        <div className="lg:col-span-3 flex flex-col justify-between rounded-xl border border-neutral-200/90 bg-neutral-50/80 p-4 space-y-3.5 dark:border-neutral-800/60 dark:bg-neutral-950/40">
+        <div className="lg:col-span-3 flex flex-col justify-between rounded-xl border border-neutral-200/90 bg-neutral-50/80 p-4 space-y-3.5 dark:border-neutral-800/60 dark:bg-neutral-950/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs">
           <div>
             <div className="flex items-center justify-between">
               <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">

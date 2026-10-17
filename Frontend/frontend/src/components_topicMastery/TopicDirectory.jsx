@@ -11,9 +11,9 @@ import {
 } from 'lucide-react'
 
 const CATEGORY_STYLES = {
-  fundamental: 'bg-sky-500/10 text-sky-700 border-sky-500/20 dark:bg-sky-500/20 dark:text-sky-300 dark:border-sky-500/30',
-  intermediate: 'bg-violet-500/10 text-violet-700 border-violet-500/20 dark:bg-violet-500/20 dark:text-violet-300 dark:border-violet-500/30',
-  advanced: 'bg-fuchsia-500/10 text-fuchsia-700 border-fuchsia-500/20 dark:bg-fuchsia-500/20 dark:text-fuchsia-300 dark:border-fuchsia-500/30'
+  fundamental: 'bg-sky-500/10 text-sky-700 border-sky-500/20 dark:bg-sky-500/15 dark:text-sky-400 dark:border-sky-500/30',
+  intermediate: 'bg-violet-500/10 text-violet-700 border-violet-500/20 dark:bg-violet-500/15 dark:text-violet-400 dark:border-violet-500/30',
+  advanced: 'bg-fuchsia-500/10 text-fuchsia-700 border-fuchsia-500/20 dark:bg-fuchsia-500/15 dark:text-fuchsia-400 dark:border-fuchsia-500/30'
 }
 
 function TopicCardItem({ topic }) {
@@ -29,7 +29,7 @@ function TopicCardItem({ topic }) {
         badge: 'bg-rose-500/10 text-rose-700 border-rose-500/20 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30',
         bar: 'bg-rose-500',
         accText: 'text-rose-600 dark:text-rose-400',
-        reasonBadge: 'bg-rose-500/10 text-rose-700 border-rose-500/20 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/40',
+        reasonBadge: 'bg-rose-500/10 text-rose-700 border-rose-500/20 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900/40',
         btn: 'bg-rose-600 hover:bg-rose-700 text-white dark:bg-rose-600 dark:hover:bg-rose-500',
         actionLabel: 'Immediate Focus',
         Icon: ShieldAlert
@@ -40,7 +40,7 @@ function TopicCardItem({ topic }) {
         badge: 'bg-amber-500/10 text-amber-700 border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30',
         bar: 'bg-amber-500',
         accText: 'text-amber-600 dark:text-amber-400',
-        reasonBadge: 'bg-amber-500/10 text-amber-700 border-amber-500/20 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40',
+        reasonBadge: 'bg-amber-500/10 text-amber-700 border-amber-500/20 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/40',
         btn: 'bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-600 dark:hover:bg-amber-500',
         actionLabel: 'Drill Target',
         Icon: TrendingUp
@@ -50,7 +50,7 @@ function TopicCardItem({ topic }) {
         badge: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30',
         bar: 'bg-emerald-500',
         accText: 'text-emerald-600 dark:text-emerald-400',
-        reasonBadge: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/40',
+        reasonBadge: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/40',
         btn: 'bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-neutral-100 dark:hover:bg-neutral-200 dark:text-neutral-900',
         actionLabel: 'Verified Mastery',
         Icon: Sparkles
@@ -61,7 +61,7 @@ function TopicCardItem({ topic }) {
   return (
     <div
       className={`
-        flex flex-col justify-between rounded-xl border p-4.5 transition-all duration-200 group shadow-xs
+        flex flex-col justify-between rounded-xl border p-4.5 transition-all duration-200 group shadow-xs hover:-translate-y-0.5 hover:shadow-md
         ${tierClasses.card}
       `}
     >
@@ -80,7 +80,7 @@ function TopicCardItem({ topic }) {
 
         {/* Topic Title & Acceptance Rate */}
         <div className="flex items-baseline justify-between gap-2 mt-1">
-          <h3 className="text-base font-black tracking-tight text-neutral-900 dark:text-neutral-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+          <h3 className="text-base font-black tracking-tight text-neutral-900 dark:text-neutral-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
             {topic.name}
           </h3>
           <div className="text-right font-mono shrink-0">
@@ -115,7 +115,7 @@ function TopicCardItem({ topic }) {
             <span className="text-[9px] uppercase tracking-wider text-neutral-400 dark:text-neutral-500 block font-bold">
               Solved
             </span>
-            <span className="text-xs font-black text-neutral-900 dark:text-neutral-100">
+            <span className="text-xs font-black text-neutral-900 dark:text-neutral-200">
               {topic.volume}
             </span>
           </div>
@@ -123,7 +123,7 @@ function TopicCardItem({ topic }) {
             <span className="text-[9px] uppercase tracking-wider text-neutral-400 dark:text-neutral-500 block font-bold">
               Attempts
             </span>
-            <span className="text-xs font-black text-neutral-900 dark:text-neutral-100">
+            <span className="text-xs font-black text-neutral-900 dark:text-neutral-200">
               {topic.totalAttempts}
             </span>
           </div>
@@ -131,7 +131,7 @@ function TopicCardItem({ topic }) {
             <span className="text-[9px] uppercase tracking-wider text-neutral-400 dark:text-neutral-500 block font-bold">
               Velocity
             </span>
-            <span className="text-xs font-black text-neutral-900 dark:text-neutral-100">
+            <span className="text-xs font-black text-neutral-900 dark:text-neutral-200">
               {topic.triesPerSolve > 0 ? `${topic.triesPerSolve}x` : '—'}
             </span>
           </div>
@@ -139,19 +139,19 @@ function TopicCardItem({ topic }) {
 
         {/* Difficulty Distribution Badges */}
         <div className="flex items-center gap-1.5 mt-2.5 text-[10px] font-mono">
-          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 font-bold border border-emerald-500/20 dark:border-emerald-500/30">
+          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 font-bold border border-emerald-500/20 dark:border-emerald-500/30">
             E: {topic.easySolved}
           </span>
-          <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 font-bold border border-amber-500/20 dark:border-amber-500/30">
+          <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 font-bold border border-amber-500/20 dark:border-amber-500/30">
             M: {topic.mediumSolved}
           </span>
-          <span className="px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 font-bold border border-rose-500/20 dark:border-rose-500/30">
+          <span className="px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400 font-bold border border-rose-500/20 dark:border-rose-500/30">
             H: {topic.hardSolved}
           </span>
         </div>
 
         {/* Algorithmic Diagnostic Note */}
-        <p className="mt-3 text-[11.5px] leading-relaxed text-neutral-600 dark:text-neutral-300 line-clamp-3">
+        <p className="mt-3 text-[11.5px] leading-relaxed text-neutral-600 dark:text-neutral-400 line-clamp-3">
           {topic.diagnostic}
         </p>
       </div>
@@ -273,7 +273,7 @@ export default function TopicDirectory({ topics = [] }) {
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200">
               <BarChart3 className="h-4 w-4 text-emerald-500" />
             </div>
-            <h2 className="text-base sm:text-lg font-black tracking-tight text-neutral-900 dark:text-neutral-100">
+            <h2 className="text-base sm:text-lg font-black tracking-tight text-neutral-900 dark:text-neutral-200">
               Topic Directory
             </h2>
           </div>

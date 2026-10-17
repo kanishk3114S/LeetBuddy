@@ -1,7 +1,9 @@
 import crypto from "crypto";
+import mongoose from "mongoose";
 import userModel from "../models/user.model.js";
 import profileDataModel from "../models/profile-data.model.js";
 import { generateHeroCard } from "../Ai/heroCard.service.js";
+import { syncContestData } from "../services/leetcodeContest.service.js";
 
 // Master list of all recognized LeetCode topics across all 3 tiers
 const ALL_LEETCODE_TOPICS = [
@@ -56,7 +58,11 @@ const ALL_LEETCODE_TOPICS = [
 export const generateVerificationToken = async (req, res) => {
     try {
         const { leetcodeUsername } = req.body;
-        const userId = req.user.id;
+        const userId = req.user?.id;
+
+        if (!userId) {
+            return res.status(401).json({ error: "User authentication required" });
+        }
 
         if (!leetcodeUsername) {
             return res.status(400).json({ error: "LeetCode username is required" });
@@ -101,7 +107,11 @@ export const generateVerificationToken = async (req, res) => {
 
 export const verifyLeetCode = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user?.id;
+
+        if (!userId) {
+            return res.status(401).json({ error: "User authentication required" });
+        }
 
         // 1. Database Lookup for pending username & token
         const user = await userModel.findById(userId);
@@ -130,8 +140,8 @@ export const verifyLeetCode = async (req, res) => {
         const aboutMe = bioData?.data?.matchedUser?.profile?.aboutMe || "";
 
         // 3. Match Check
-        if (!aboutMe.includes(verificationToken)) {
-            return res.status(400).json({ error: "Token not found, please try again" });
+        if (!aboutMe.includes(verificationToken.trim())) {
+            return res.status(400).json({ error: "Token not found in LeetCode bio. Please paste it, save on LeetCode, and try again." });
         }
 
         // 4. Mark verified & clear token for security
@@ -196,14 +206,28 @@ export const verifyLeetCode = async (req, res) => {
             }
         `;
 
-        const statsRes = await fetch("https://leetcode.com/graphql", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Referer": "https://leetcode.com" },
-            body: JSON.stringify({ query: statsQuery, variables: { username } })
-        });
+        // 6. FETCH STATS AND CONTEST TELEMETRY IN PARALLEL
+        const [statsResultSettled, contestResultSettled] = await Promise.allSettled([
+            fetch("https://leetcode.com/graphql", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Referer": "https://leetcode.com" },
+                body: JSON.stringify({ query: statsQuery, variables: { username } })
+            }),
+            syncContestData(username, userId)
+        ]);
+
+        const statsRes = statsResultSettled.status === "fulfilled" ? statsResultSettled.value : null;
+        if (!statsRes || !statsRes.ok) {
+            return res.status(502).json({ error: "Failed to fetch comprehensive profile stats from LeetCode" });
+        }
 
         const statsData = await statsRes.json();
         const userData = statsData?.data?.matchedUser;
+
+        if (!userData) {
+            return res.status(404).json({ error: `LeetCode profile for "${username}" was not found or is private` });
+        }
+
         const allQuestionsList = statsData?.data?.allQuestionsCount || [];
 
         // Total available questions on LeetCode
@@ -375,11 +399,14 @@ export const verifyLeetCode = async (req, res) => {
         );
 
         // 8. RETURN IN RESPONSE TO FRONTEND
+        const contestData = contestResultSettled.status === "fulfilled" ? contestResultSettled.value : null;
+
         return res.status(200).json({
             message: "LeetCode profile verified and data synced successfully!",
             username,
             profile: profileData,
-            heroCard: heroCard || profileData?.heroCard || null
+            heroCard: heroCard || profileData?.heroCard || null,
+            contest: contestData
         });
 
     } catch (error) {
@@ -396,44 +423,57 @@ export const getOrGenerateHeroCard = async (req, res) => {
     try {
         const { profileData, username } = req.body || {};
         const userId = req.user?.id;
+        const isForceRefresh = req.query?.refresh === 'true' || req.query?.refresh === true;
 
-        // 1. If user is authenticated and DB has an existing heroCard, return it unless forceRefresh requested
-        if (userId && !req.query?.refresh) {
-            const existing = await profileDataModel.findOne({ userId });
-            if (existing?.heroCard?.summary) {
-                return res.status(200).json({ heroCard: existing.heroCard });
+        // 1. If user is authenticated, not force refreshing, and DB is connected, check cached heroCard
+        if (userId && !isForceRefresh && mongoose.connection.readyState === 1) {
+            try {
+                const existing = await profileDataModel.findOne({ userId });
+                if (existing?.heroCard?.summary) {
+                    return res.status(200).json({ heroCard: existing.heroCard });
+                }
+            } catch (dbErr) {
+                console.warn("[HeroCard] DB lookup warning:", dbErr.message);
             }
         }
 
         // 2. Source profile data either from request body or database
         let targetData = profileData;
-        if (!targetData && userId) {
-            targetData = await profileDataModel.findOne({ userId });
+        if (!targetData && userId && mongoose.connection.readyState === 1) {
+            try {
+                targetData = await profileDataModel.findOne({ userId });
+            } catch (dbErr) {
+                console.warn("[HeroCard] DB fetch warning:", dbErr.message);
+            }
         }
 
         if (!targetData) {
             return res.status(400).json({ error: "Profile stats are required to generate an AI Hero Card" });
         }
 
-        //ai function//
-
+        // Call Gemini AI directly
+        const targetUsername = username || targetData?.username || targetData?.profile?.realName || "Developer";
         const heroCard = await generateHeroCard({
             ...targetData,
-            username: username || targetData?.username || targetData?.profile?.realName || "Developer"
+            username: targetUsername
         });
 
-        // 3. Persist if userId available
-        if (userId) {
-            await profileDataModel.findOneAndUpdate(
-                { userId },
-                { $set: { heroCard } }
-            );
+        // 3. Persist if userId available and DB is connected
+        if (userId && mongoose.connection.readyState === 1) {
+            try {
+                await profileDataModel.findOneAndUpdate(
+                    { userId },
+                    { $set: { heroCard } }
+                );
+            } catch (dbSaveErr) {
+                console.warn("[HeroCard] DB save warning:", dbSaveErr.message);
+            }
         }
 
         return res.status(200).json({ heroCard });
     } catch (error) {
         console.error("Error in getOrGenerateHeroCard:", error);
-        return res.status(500).json({ error: "Failed to generate AI Hero Card" });
+        return res.status(500).json({ error: error.message || "Failed to generate AI Hero Card" });
     }
 };
 
@@ -524,14 +564,20 @@ export const refreshLeetCodeStats = async (req, res) => {
             }
         `;
 
-        const statsRes = await fetch("https://leetcode.com/graphql", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Referer": "https://leetcode.com" },
-            body: JSON.stringify({ query: statsQuery, variables: { username } })
-        });
+        // Fetch fresh stats from LeetCode GraphQL and contest telemetry in parallel
+        const [statsResultSettled, contestResultSettled] = await Promise.allSettled([
+            fetch("https://leetcode.com/graphql", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Referer": "https://leetcode.com" },
+                body: JSON.stringify({ query: statsQuery, variables: { username } })
+            }),
+            syncContestData(username, userId)
+        ]);
 
-        if (!statsRes.ok) {
-            return res.status(statsRes.status).json({ error: "Failed to fetch updated data from LeetCode" });
+        const statsRes = statsResultSettled.status === "fulfilled" ? statsResultSettled.value : null;
+
+        if (!statsRes || !statsRes.ok) {
+            return res.status(statsRes ? statsRes.status : 502).json({ error: "Failed to fetch updated data from LeetCode" });
         }
 
         const statsData = await statsRes.json();
@@ -663,24 +709,32 @@ export const refreshLeetCodeStats = async (req, res) => {
         };
 
         let updatedProfile = null;
-        if (userId) {
-            updatedProfile = await profileDataModel.findOneAndUpdate(
-                { userId },
-                { $set: updatePayload },
-                { upsert: true, new: true }
-            );
+        if (userId && mongoose.connection.readyState === 1) {
+            try {
+                updatedProfile = await profileDataModel.findOneAndUpdate(
+                    { userId },
+                    { $set: updatePayload },
+                    { upsert: true, new: true }
+                );
 
-            await userModel.findByIdAndUpdate(userId, {
-                $set: { "leetcode.lastSynced": new Date() }
-            });
+                await userModel.findByIdAndUpdate(userId, {
+                    $set: { "leetcode.lastSynced": new Date() }
+                });
+            } catch (dbErr) {
+                console.warn("[Refresh] DB update warning:", dbErr.message);
+                updatedProfile = updatePayload;
+            }
         } else {
             updatedProfile = updatePayload;
         }
+
+        const contestData = contestResultSettled.status === "fulfilled" ? contestResultSettled.value : null;
 
         return res.status(200).json({
             message: "LeetCode stats refreshed successfully!",
             username,
             profile: updatedProfile,
+            contest: contestData,
             lastSynced: new Date().toISOString()
         });
 

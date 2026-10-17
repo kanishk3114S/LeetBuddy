@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useTheme } from '../hooks/useTheme.js'
 import Sidebar from '../components_dashboard/Sidebar.jsx'
 import DashHeader from '../components_dashboard/DashHeader.jsx'
 import TopicMasteryMatrix from '../components_profileAnalyses/TopicMasteryMatrix.jsx'
@@ -8,8 +9,9 @@ import { AlertTriangle } from 'lucide-react'
 
 export default function TopicMastery() {
   const [activeNav, setActiveNav] = useState('topic-mastery')
+  const { isDarkMode } = useTheme()
 
-  const [stats] = useState(() => {
+  const [stats, setStats] = useState(() => {
     try {
       const saved = localStorage.getItem('lb_stats')
       return saved ? JSON.parse(saved) : null
@@ -17,6 +19,17 @@ export default function TopicMastery() {
       return null
     }
   })
+
+  // Listen for real-time stats updates from refresh or verification
+  useEffect(() => {
+    const handleStatsUpdated = (e) => {
+      if (e.detail) {
+        setStats(e.detail)
+      }
+    }
+    window.addEventListener('lb_stats_updated', handleStatsUpdated)
+    return () => window.removeEventListener('lb_stats_updated', handleStatsUpdated)
+  }, [])
 
   // Restore user info from localStorage
   const user = {
@@ -69,7 +82,10 @@ export default function TopicMastery() {
                   <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
                     ◈
                   </span>
-                  <h1 className="text-xl sm:text-2xl font-black tracking-tight text-neutral-900 dark:text-neutral-100">
+                  <h1
+                    className="text-xl sm:text-2xl font-black tracking-tight transition-colors duration-200"
+                    style={{ color: isDarkMode ? '#e5e7eb' : '#111827' }}
+                  >
                     Topic Mastery Platform
                   </h1>
                 </div>
@@ -79,7 +95,7 @@ export default function TopicMastery() {
               </div>
 
               {/* Weakness Alert Badge */}
-              <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50/80 px-3.5 py-2 text-xs font-mono font-bold text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-300 shrink-0 self-start sm:self-auto">
+              <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50/80 px-3.5 py-2 text-xs font-mono font-bold text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-400 shrink-0 self-start sm:self-auto">
                 <AlertTriangle className="h-4 w-4 text-rose-500 shrink-0" />
                 <span>Primary Gap: {summary.topWeakness}</span>
               </div>
@@ -88,12 +104,12 @@ export default function TopicMastery() {
             {/* 4 Scorecard Metric Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {/* Card 1: Global Mastery Index */}
-              <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-xs dark:border-neutral-800 dark:bg-neutral-900 transition-colors">
+              <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-xs dark:border-neutral-800 dark:bg-neutral-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                 <span className="font-mono text-[10px] uppercase font-bold text-neutral-400 block tracking-wider">
                   Mastery Index
                 </span>
                 <div className="flex items-baseline gap-1.5 mt-1">
-                  <span className="text-2xl sm:text-3xl font-black font-mono text-neutral-900 dark:text-neutral-100">
+                  <span className="text-2xl sm:text-3xl font-black font-mono text-neutral-900 dark:text-neutral-200">
                     {summary.avgMastery}%
                   </span>
                   <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
@@ -109,7 +125,7 @@ export default function TopicMastery() {
               </div>
 
               {/* Card 2: Critical Weaknesses */}
-              <div className="rounded-xl border border-rose-200 bg-white p-4 shadow-xs dark:border-rose-950/60 dark:bg-neutral-900 transition-colors">
+              <div className="rounded-xl border border-rose-200 bg-white p-4 shadow-xs dark:border-rose-950/60 dark:bg-neutral-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                 <span className="font-mono text-[10px] uppercase font-bold text-rose-600 dark:text-rose-400 block tracking-wider flex items-center gap-1">
                   <span>🔴</span> Critical Weaknesses
                 </span>
@@ -127,7 +143,7 @@ export default function TopicMastery() {
               </div>
 
               {/* Card 3: Developing Topics */}
-              <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-xs dark:border-neutral-800 dark:bg-neutral-900 transition-colors">
+              <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-xs dark:border-neutral-800 dark:bg-neutral-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                 <span className="font-mono text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 block tracking-wider flex items-center gap-1">
                   <span>🟡</span> Developing Topics
                 </span>
@@ -145,7 +161,7 @@ export default function TopicMastery() {
               </div>
 
               {/* Card 4: Dominant Strengths */}
-              <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-xs dark:border-neutral-800 dark:bg-neutral-900 transition-colors">
+              <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-xs dark:border-neutral-800 dark:bg-neutral-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                 <span className="font-mono text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 block tracking-wider flex items-center gap-1">
                   <span>🟢</span> Proficient Strengths
                 </span>

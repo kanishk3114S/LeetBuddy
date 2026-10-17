@@ -9,6 +9,23 @@ import {
   Tooltip
 } from 'recharts'
 import { Network, Sparkles } from 'lucide-react'
+import { useTheme } from '../hooks/useTheme.js'
+
+// Semantic theme tokens for tier categories across light/dark modes
+const TIER_TOKENS = {
+  strong: {
+    badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-500/30',
+    text: 'text-emerald-600 dark:text-emerald-400'
+  },
+  medium: {
+    badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 dark:border-amber-500/30',
+    text: 'text-amber-600 dark:text-amber-400'
+  },
+  weak: {
+    badge: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 dark:border-rose-500/30',
+    text: 'text-rose-600 dark:text-rose-400'
+  }
+}
 
 // Primary 8 topic clusters specified in the prompt
 const MAJOR_CLUSTERS = [
@@ -26,17 +43,12 @@ const MAJOR_CLUSTERS = [
 function CustomRadarTooltip({ active, payload }) {
   if (active && payload && payload.length) {
     const d = payload[0].payload
+    const tierStyle = TIER_TOKENS[d.tierType] || TIER_TOKENS.medium
     return (
-      <div className="rounded-xl border border-neutral-200 bg-white/95 text-neutral-900 shadow-xl backdrop-blur-md p-3 dark:border-neutral-800 dark:bg-neutral-950/95 dark:text-white">
+      <div className="rounded-xl border border-neutral-200 bg-white/95 text-neutral-900 shadow-xl backdrop-blur-md p-3 dark:border-neutral-800 dark:bg-neutral-950/95 dark:text-white transition-all">
         <div className="flex items-center gap-2">
           <span className="font-mono text-xs font-bold text-neutral-900 dark:text-white">{d.topic}</span>
-          <span
-            className="rounded px-1.5 py-0.2 text-[9px] font-mono font-bold"
-            style={{
-              backgroundColor: `${d.tagColor}20`,
-              color: d.tagColor
-            }}
-          >
+          <span className={`rounded px-1.5 py-0.5 text-[9px] font-mono font-bold border ${tierStyle.badge}`}>
             {d.tag}
           </span>
         </div>
@@ -91,32 +103,32 @@ export default function TopicMasteryMatrix({ stats }) {
       // 🟡 Developing Topic: Medium volume + average accuracy
       // 🔴 Critical Weakness: High attempt volume + low acceptance rate
       let tag
-      let tagColor
+      let tierType
       let tagIcon
       let diagnostic
 
       if (cluster.name === 'Trees' || cluster.name === 'Arrays' || (volume >= 60 && accuracy >= 80)) {
         accuracy = cluster.name === 'Trees' ? 88 : 84
         tag = 'Dominant Topic'
-        tagColor = '#10B981' // Green
+        tierType = 'strong'
         tagIcon = '🟢'
         diagnostic = 'Excellent concept retention, rapid pattern spotting and low bug rate.'
       } else if (cluster.name === 'Dynamic Programming' || (volume >= 40 && accuracy <= 45)) {
         accuracy = 38
         tag = 'Critical Weakness'
-        tagColor = '#EF4444' // Red
+        tierType = 'weak'
         tagIcon = '🔴'
         diagnostic = 'High attempt volume with frequent timeouts. Recurrence & state design bottleneck.'
       } else if (cluster.name === 'Graphs') {
         accuracy = 58
         tag = 'Developing'
-        tagColor = '#EAB308' // Yellow
+        tierType = 'medium'
         tagIcon = '🟡'
         diagnostic = 'Strong BFS/DFS basics; advanced Dijkstra & topological sorts need practice.'
       } else {
         accuracy = cluster.name === 'Strings' ? 76 : cluster.name === 'Greedy' ? 68 : 62
         tag = accuracy >= 75 ? 'Dominant Topic' : 'Developing'
-        tagColor = accuracy >= 75 ? '#10B981' : '#EAB308'
+        tierType = accuracy >= 75 ? 'strong' : 'medium'
         tagIcon = accuracy >= 75 ? '🟢' : '🟡'
         diagnostic = 'Consistent progress with steady accuracy on Medium questions.'
       }
@@ -133,7 +145,7 @@ export default function TopicMasteryMatrix({ stats }) {
         mediumSolved,
         easySolved,
         tag,
-        tagColor,
+        tierType,
         tagIcon,
         diagnostic,
         masteryScore
@@ -141,8 +153,17 @@ export default function TopicMasteryMatrix({ stats }) {
     })
   }, [stats])
 
+  const { isDarkMode } = useTheme()
+
+  // Theme-aware radar chart stroke and fill variables
+  const radarStroke = isDarkMode ? '#818cf8' : '#6366f1'
+  const radarFill = isDarkMode ? '#818cf8' : '#6366f1'
+  const gridStroke = isDarkMode ? '#334155' : '#cbd5e1'
+  const tickFill = isDarkMode ? '#94a3b8' : '#64748b'
+
   // Active inspected topic
   const activeDetail = topicData.find(t => t.topic === selectedTopic) || topicData[0]
+  const activeTierStyle = TIER_TOKENS[activeDetail.tierType] || TIER_TOKENS.medium
 
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-5 sm:p-6 shadow-xs dark:border-neutral-800 dark:bg-neutral-900 transition-colors">
@@ -192,24 +213,24 @@ export default function TopicMasteryMatrix({ stats }) {
           <div className="relative h-72 w-full flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={topicData} outerRadius="75%">
-                <PolarGrid stroke="#94a3b8" strokeOpacity={0.35} />
+                <PolarGrid stroke={gridStroke} strokeOpacity={isDarkMode ? 0.35 : 0.6} />
                 <PolarAngleAxis
                   dataKey="topic"
-                  tick={{ fill: '#64748b', fontSize: 11, fontFamily: 'monospace' }}
+                  tick={{ fill: tickFill, fontSize: 11, fontFamily: 'monospace' }}
                 />
                 <PolarRadiusAxis
                   angle={30}
                   domain={[0, 100]}
-                  tick={{ fill: '#94a3b8', fontSize: 9 }}
-                  stroke="#94a3b8"
-                  strokeOpacity={0.25}
+                  tick={{ fill: tickFill, fontSize: 9 }}
+                  stroke={gridStroke}
+                  strokeOpacity={0.4}
                 />
                 <Radar
                   name="Mastery"
                   dataKey="masteryScore"
-                  stroke="#6366F1"
-                  fill="#6366F1"
-                  fillOpacity={0.35}
+                  stroke={radarStroke}
+                  fill={radarFill}
+                  fillOpacity={isDarkMode ? 0.3 : 0.22}
                   strokeWidth={2}
                 />
                 <Tooltip content={<CustomRadarTooltip />} />
@@ -217,7 +238,7 @@ export default function TopicMasteryMatrix({ stats }) {
             </ResponsiveContainer>
           </div>
 
-          {/* Quick Select Topic Pills */}
+          {/* Quick Select Topic Pills with Micro-Interactions */}
           <div className="flex flex-wrap gap-1.5 pt-3 border-t border-neutral-200 dark:border-neutral-800/60">
             {topicData.map((t) => (
               <button
@@ -225,7 +246,7 @@ export default function TopicMasteryMatrix({ stats }) {
                 type="button"
                 onClick={() => setSelectedTopic(t.topic)}
                 className={`
-                  flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-mono transition-all cursor-pointer
+                  flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-mono transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95
                   ${selectedTopic === t.topic
                     ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-bold shadow-xs'
                     : 'bg-white text-neutral-700 border border-neutral-200 hover:border-neutral-400 shadow-xs dark:bg-neutral-850 dark:text-neutral-400 dark:border-neutral-800'
@@ -247,19 +268,12 @@ export default function TopicMasteryMatrix({ stats }) {
               <span className="font-mono text-[10px] text-neutral-400 uppercase tracking-widest block font-bold">
                 Inspected Topic Cluster
               </span>
-              <h3 className="text-xl font-black text-neutral-900 dark:text-neutral-100 tracking-tight mt-0.5 flex items-center gap-2">
+              <h3 className="text-xl font-black text-neutral-900 dark:text-neutral-200 tracking-tight mt-0.5 flex items-center gap-2">
                 <span>{activeDetail.topic}</span>
               </h3>
             </div>
 
-            <div
-              className="rounded-lg px-3 py-1 font-mono text-xs font-bold border shadow-xs"
-              style={{
-                backgroundColor: `${activeDetail.tagColor}15`,
-                color: activeDetail.tagColor,
-                borderColor: `${activeDetail.tagColor}40`
-              }}
-            >
+            <div className={`rounded-lg px-3 py-1 font-mono text-xs font-bold border shadow-xs transition-colors ${activeTierStyle.badge}`}>
               {activeDetail.tagIcon} {activeDetail.tag}
             </div>
           </div>
@@ -267,11 +281,11 @@ export default function TopicMasteryMatrix({ stats }) {
           {/* Metric Trio: Volume, Accuracy, Attempts */}
           <div className="grid grid-cols-3 gap-3">
             {/* Metric 1: Volume */}
-            <div className="rounded-xl border border-neutral-200 bg-white p-3 text-center shadow-xs dark:border-neutral-800 dark:bg-neutral-900">
+            <div className="rounded-xl border border-neutral-200 bg-white p-3 text-center shadow-xs dark:border-neutral-800 dark:bg-neutral-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs">
               <span className="font-mono text-[10px] uppercase text-neutral-500 dark:text-neutral-400 block font-bold">
                 Problems Solved
               </span>
-              <span className="text-xl sm:text-2xl font-black font-mono text-neutral-900 dark:text-neutral-100 mt-1 block">
+              <span className="text-xl sm:text-2xl font-black font-mono text-neutral-900 dark:text-neutral-200 mt-1 block">
                 {activeDetail.volume}
               </span>
               <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">
@@ -280,14 +294,11 @@ export default function TopicMasteryMatrix({ stats }) {
             </div>
 
             {/* Metric 2: Accuracy Rate */}
-            <div className="rounded-xl border border-neutral-200 bg-white p-3 text-center shadow-xs dark:border-neutral-800 dark:bg-neutral-900">
+            <div className="rounded-xl border border-neutral-200 bg-white p-3 text-center shadow-xs dark:border-neutral-800 dark:bg-neutral-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs">
               <span className="font-mono text-[10px] uppercase text-neutral-500 dark:text-neutral-400 block font-bold">
                 Accuracy Rate
               </span>
-              <span
-                className="text-xl sm:text-2xl font-black font-mono mt-1 block"
-                style={{ color: activeDetail.tagColor }}
-              >
+              <span className={`text-xl sm:text-2xl font-black font-mono mt-1 block ${activeTierStyle.text}`}>
                 {activeDetail.accuracy}%
               </span>
               <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">
@@ -296,11 +307,11 @@ export default function TopicMasteryMatrix({ stats }) {
             </div>
 
             {/* Metric 3: Total Attempts */}
-            <div className="rounded-xl border border-neutral-200 bg-white p-3 text-center shadow-xs dark:border-neutral-800 dark:bg-neutral-900">
+            <div className="rounded-xl border border-neutral-200 bg-white p-3 text-center shadow-xs dark:border-neutral-800 dark:bg-neutral-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs">
               <span className="font-mono text-[10px] uppercase text-neutral-500 dark:text-neutral-400 block font-bold">
                 Total Attempts
               </span>
-              <span className="text-xl sm:text-2xl font-black font-mono text-neutral-900 dark:text-neutral-100 mt-1 block">
+              <span className="text-xl sm:text-2xl font-black font-mono text-neutral-900 dark:text-neutral-200 mt-1 block">
                 {activeDetail.totalAttempts}
               </span>
               <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">
@@ -320,7 +331,7 @@ export default function TopicMasteryMatrix({ stats }) {
                 <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 block font-bold">
                   Easy
                 </span>
-                <span className="text-sm font-black font-mono text-neutral-900 dark:text-neutral-100">
+                <span className="text-sm font-black font-mono text-neutral-900 dark:text-neutral-200">
                   {activeDetail.easySolved}
                 </span>
               </div>
@@ -329,7 +340,7 @@ export default function TopicMasteryMatrix({ stats }) {
                 <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 block font-bold">
                   Medium
                 </span>
-                <span className="text-sm font-black font-mono text-neutral-900 dark:text-neutral-100">
+                <span className="text-sm font-black font-mono text-neutral-900 dark:text-neutral-200">
                   {activeDetail.mediumSolved}
                 </span>
               </div>
@@ -338,7 +349,7 @@ export default function TopicMasteryMatrix({ stats }) {
                 <span className="text-[10px] font-mono text-rose-600 dark:text-rose-400 block font-bold">
                   Hard
                 </span>
-                <span className="text-sm font-black font-mono text-neutral-900 dark:text-neutral-100">
+                <span className="text-sm font-black font-mono text-neutral-900 dark:text-neutral-200">
                   {activeDetail.hardSolved}
                 </span>
               </div>
@@ -352,7 +363,7 @@ export default function TopicMasteryMatrix({ stats }) {
               <strong className="font-mono text-[10px] uppercase tracking-wider text-neutral-600 dark:text-neutral-400 block font-bold">
                 Pattern Diagnostic
               </strong>
-              <p className="text-neutral-800 dark:text-neutral-300 text-xs leading-relaxed mt-0.5">
+              <p className="text-neutral-700 dark:text-neutral-400 text-xs leading-relaxed mt-0.5">
                 {activeDetail.diagnostic}
               </p>
             </div>

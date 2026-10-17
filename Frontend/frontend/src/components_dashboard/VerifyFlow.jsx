@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { formatGraphQLResponse } from '../utils/profileData.js'
 
 // Pure alphanumeric token generator
 function generateRandomToken() {
@@ -264,104 +265,8 @@ query getUserFullStats($username: String!) {
 }
 `;
 
-// Helper to normalize and structure raw GraphQL response into our profile shape
-function formatGraphQLResponse(userData, allQuestionsList) {
-  const acList = userData?.submitStatsGlobal?.acSubmissionNum || [];
-  const totalSolved = acList.find(x => x.difficulty === "All")?.count || 0;
-  const easySolved = acList.find(x => x.difficulty === "Easy")?.count || 0;
-  const mediumSolved = acList.find(x => x.difficulty === "Medium")?.count || 0;
-  const hardSolved = acList.find(x => x.difficulty === "Hard")?.count || 0;
+// formatGraphQLResponse is imported from ../utils/profileData.js
 
-  const totalSubList = userData?.submitStatsGlobal?.totalSubmissionNum || [];
-  const acceptedSubmissions = acList.find(x => x.difficulty === "All")?.submissions || 0;
-  const totalSubmissions = totalSubList.find(x => x.difficulty === "All")?.submissions || 0;
-  const acceptanceRate = totalSubmissions > 0 ? Number(((acceptedSubmissions / totalSubmissions) * 100).toFixed(1)) : 0;
-
-  const allQuestionsCount = {
-    all: allQuestionsList.find(x => x.difficulty === "All")?.count || 4082,
-    easy: allQuestionsList.find(x => x.difficulty === "Easy")?.count || 971,
-    medium: allQuestionsList.find(x => x.difficulty === "Medium")?.count || 2128,
-    hard: allQuestionsList.find(x => x.difficulty === "Hard")?.count || 983
-  };
-
-  const beatsList = userData?.problemsSolvedBeatsStats || [];
-  const beatsStats = {
-    easy: beatsList.find(x => x.difficulty === "Easy")?.percentage || 0,
-    medium: beatsList.find(x => x.difficulty === "Medium")?.percentage || 0,
-    hard: beatsList.find(x => x.difficulty === "Hard")?.percentage || 0
-  };
-
-  const leetBuddyPoints = (easySolved * 1) + (mediumSolved * 3) + (hardSolved * 5);
-
-  const parsedCalendar = JSON.parse(userData?.userCalendar?.submissionCalendar || "{}");
-  let bestPerformingDay = null;
-  let maxSubmissionsOnDay = 0;
-
-  for (const [timestamp, count] of Object.entries(parsedCalendar)) {
-    if (count > maxSubmissionsOnDay) {
-      maxSubmissionsOnDay = count;
-      bestPerformingDay = {
-        date: new Date(Number(timestamp) * 1000).toISOString(),
-        submissionCount: count
-      };
-    }
-  }
-
-  const badges = (userData?.badges || []).map(b => ({
-    id: b.id,
-    name: b.displayName || b.shortName || b.name,
-    icon: b.icon?.startsWith("http") ? b.icon : (b.icon ? `https://leetcode.com${b.icon}` : ""),
-    category: b.category || "",
-    creationDate: b.creationDate || null
-  }));
-
-  const activeBadge = userData?.activeBadge ? {
-    id: userData.activeBadge.id,
-    name: userData.activeBadge.displayName || userData.activeBadge.name,
-    icon: userData.activeBadge.icon?.startsWith("http") ? userData.activeBadge.icon : (userData.activeBadge.icon ? `https://leetcode.com${userData.activeBadge.icon}` : "")
-  } : (badges.length > 0 ? badges[0] : null);
-
-  const topics = [];
-  const addTags = (list, category) => {
-    (list || []).forEach(t => {
-      topics.push({ tagName: t.tagName, problemsSolved: t.problemsSolved, category });
-    });
-  };
-  addTags(userData?.tagProblemCounts?.fundamental, 'fundamental');
-  addTags(userData?.tagProblemCounts?.intermediate, 'intermediate');
-  addTags(userData?.tagProblemCounts?.advanced, 'advanced');
-
-  return {
-    stats: {
-      totalSolved,
-      easySolved,
-      mediumSolved,
-      hardSolved,
-      totalSubmissions,
-      acceptedSubmissions,
-      acceptanceRate,
-      leetBuddyPoints
-    },
-    allQuestionsCount,
-    beatsStats,
-    profile: {
-      ranking: userData?.profile?.ranking || 0,
-      userAvatar: userData?.profile?.userAvatar || "",
-      realName: userData?.profile?.realName || "",
-      aboutMe: userData?.profile?.aboutMe || ""
-    },
-    activeBadge,
-    topics,
-    badges,
-    activity: {
-      currentStreak: userData?.userCalendar?.streak || 0,
-      totalActiveDays: userData?.userCalendar?.totalActiveDays || 0,
-      activeYears: userData?.userCalendar?.activeYears || [new Date().getFullYear()],
-      bestPerformingDay
-    },
-    submissionCalendar: parsedCalendar
-  };
-}
 
 // ── Main Export ────────────────────────────────────────────────────────────
 export default function VerifyFlow({ onVerified }) {
@@ -428,6 +333,14 @@ export default function VerifyFlow({ onVerified }) {
                 window.dispatchEvent(new CustomEvent('lb_hero_card_updated', { detail: data.heroCard }))
               } catch (e) {
                 console.warn('LocalStorage save error', e)
+              }
+            }
+            if (data?.contest) {
+              try {
+                localStorage.setItem('lb_contest', JSON.stringify(data.contest))
+                window.dispatchEvent(new CustomEvent('lb_contest_updated', { detail: data.contest }))
+              } catch (e) {
+                console.warn('LocalStorage contest save error', e)
               }
             }
             onVerified({ username: data.username || username, profile: data.profile })

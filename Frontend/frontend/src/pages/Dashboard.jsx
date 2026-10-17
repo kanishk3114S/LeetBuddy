@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Sidebar from '../components_dashboard/Sidebar.jsx'
 import DashHeader from '../components_dashboard/DashHeader.jsx'
 import VerifyFlow from '../components_dashboard/VerifyFlow.jsx'
@@ -14,6 +14,17 @@ export default function Dashboard() {
       return null
     }
   })
+
+  // Listen for real-time stats updates from refresh or verification
+  useEffect(() => {
+    const handleStatsUpdated = (e) => {
+      if (e.detail) {
+        setStats(e.detail)
+      }
+    }
+    window.addEventListener('lb_stats_updated', handleStatsUpdated)
+    return () => window.removeEventListener('lb_stats_updated', handleStatsUpdated)
+  }, [])
 
   // Restore user from localStorage
   const user = {

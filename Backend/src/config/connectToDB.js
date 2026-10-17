@@ -1,17 +1,19 @@
 import mongoose from "mongoose";
 import config from "./config.js";
-import { ApiError } from "../utils/api-error.js";
 
 async function connectDB() {
     if (!config.MONGO_URI) {
-        throw new ApiError(500, "MongoDB URI is missing");
+        console.warn("[MongoDB] MONGO_URI is missing in config");
+        return;
     }
 
     try {
-        await mongoose.connect(config.MONGO_URI);
-        console.log("The database has been connected");
+        await mongoose.connect(config.MONGO_URI, {
+            serverSelectionTimeoutMS: 5000 // 5s timeout instead of hanging
+        });
+        console.log("[MongoDB] Database connected successfully");
     } catch (error) {
-        throw new ApiError(500, error.message || "Database connection failed");
+        console.warn("[MongoDB] Connection warning (server continuing):", error.message || "Database connection failed");
     }
 }
 

@@ -8,21 +8,20 @@ import config from "../config/config.js";
  * @param {Object} profileData - Normalized user profile data and statistics
  * @returns {Promise<Object>} Hero card content
  */
-export async function generateHeroCard(profileData) {
+export async function generateHeroCard(profileData = {}) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-        console.warn("[HeroCard] GEMINI_API_KEY is not defined in environment variables. Using fallback summary.");
-        return createFallbackHeroCard(profileData);
+        throw new Error("GEMINI_API_KEY is not defined in backend environment variables.");
     }
 
-    const {
-        username = "Developer",
-        stats = {},
-        allQuestionsCount = {},
-        beatsStats = {},
-        topics = [],
-        activity = {}
-    } = profileData;
+    // Resolve nested or flat structures defensively
+    const stats = profileData.stats || profileData.profile?.stats || profileData || {};
+    const topics = (Array.isArray(profileData.topics) && profileData.topics.length > 0)
+        ? profileData.topics
+        : (Array.isArray(profileData.profile?.topics) ? profileData.profile.topics : []);
+    const beatsStats = profileData.beatsStats || profileData.profile?.beatsStats || {};
+    const activity = profileData.activity || profileData.profile?.activity || {};
+    const username = profileData.username || profileData.profile?.realName || "Developer";
 
     // Filter and sort top topics
     const activeTopics = (topics || [])
@@ -34,7 +33,7 @@ export async function generateHeroCard(profileData) {
     // Check advanced topics with 0 or low solves
     const criticalAdvanced = ["Dynamic Programming", "Graph Theory", "Backtracking", "Trie", "Binary Search"];
     const weakTopics = criticalAdvanced.filter(crit => {
-        const found = (topics || []).find(t => t.tagName.toLowerCase() === crit.toLowerCase());
+        const found = (topics || []).find(t => t.tagName?.toLowerCase() === crit.toLowerCase());
         return !found || found.problemsSolved <= 2;
     }).slice(0, 2);
 
@@ -87,7 +86,8 @@ Required JSON Schema:
 `;
 
     // Try models in order of capability and speed
- const candidateModels = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.8-flash"];
+    const candidateModels = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.8-flash"];
+    let lastError = null;
 
     for (const modelName of candidateModels) {
         try {
@@ -127,12 +127,12 @@ Required JSON Schema:
                 };
             }
         } catch (err) {
-            console.warn(`[Gemini AI Pipeline] ⚠️ Model ${modelName} call failed (${err?.message || err}). Trying fallback candidate...`);
+            lastError = err;
+            console.warn(`[Gemini AI Pipeline] ⚠️ Model ${modelName} call failed (${err?.message || err}). Trying next candidate...`);
         }
     }
 
-    console.warn("[Gemini AI Pipeline] ⚠️ All Gemini API models failed. Returning algorithmic fallback Hero Card.");
-    return createFallbackHeroCard(profileData);
+    throw new Error(`Google Gemini API generation failed: ${lastError?.message || "All models failed"}`);
 }
 
 

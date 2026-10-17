@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Sidebar from '../components_dashboard/Sidebar.jsx'
 import DashHeader from '../components_dashboard/DashHeader.jsx'
 import ProgressMountain from '../components_profileAnalyses/ProgressMountain.jsx'
@@ -8,7 +8,7 @@ import BehavioralConsistencyAnalysis from '../components_profileAnalyses/Behavio
 export default function ProfileAnalysis() {
   const [activeNav, setActiveNav] = useState('profile-analysis')
 
-  const [stats] = useState(() => {
+  const [stats, setStats] = useState(() => {
     try {
       const saved = localStorage.getItem('lb_stats')
       return saved ? JSON.parse(saved) : null
@@ -17,14 +17,25 @@ export default function ProfileAnalysis() {
     }
   })
 
+  // Listen for real-time stats updates from refresh or verification
+  useEffect(() => {
+    const handleStatsUpdated = (e) => {
+      if (e.detail) {
+        setStats(e.detail)
+      }
+    }
+    window.addEventListener('lb_stats_updated', handleStatsUpdated)
+    return () => window.removeEventListener('lb_stats_updated', handleStatsUpdated)
+  }, [])
+
   // Restore user info from localStorage
   const user = {
     email: localStorage.getItem('lb_email') || '',
     name: localStorage.getItem('lb_name') || '',
   }
 
-  // Use actual verified LeetBuddy points, or default to 3250 for interactive demonstration
-  const leetBuddyPoints = stats?.profile?.stats?.leetBuddyPoints ?? 3250
+  // Use actual verified LeetBuddy points, checking both nested and flat shapes
+  const leetBuddyPoints = stats?.profile?.stats?.leetBuddyPoints ?? stats?.stats?.leetBuddyPoints ?? 3250
 
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-50 font-[Manrope,Arial,sans-serif] dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors duration-300">

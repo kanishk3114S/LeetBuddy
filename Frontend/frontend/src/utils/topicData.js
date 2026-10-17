@@ -405,14 +405,12 @@ export function analyzeTopics(profileData) {
     // 🟡 Developing: Solved >= Minimum_Threshold (5) AND 40% <= Acceptance Rate < 70%
     // 🟢 Proficient/Strong: Solved >= Minimum_Threshold (5) AND Acceptance Rate >= 70%
     let tag = 'Developing Topic'
-    let tagColor = '#EAB308'
     let tagIcon = '🟡'
     let tierType = 'medium'
     let tierReason = `Moderate acceptance rate (${accuracy}%)`
 
     if (volume < MIN_VOLUME_THRESHOLD || accuracy < ACCURACY_WEAK_THRESHOLD) {
       tag = 'Weak Topic'
-      tagColor = '#EF4444'
       tagIcon = '🔴'
       tierType = 'weak'
       tierReason = volume < MIN_VOLUME_THRESHOLD
@@ -420,7 +418,6 @@ export function analyzeTopics(profileData) {
         : `Low acceptance rate (${accuracy}% < ${ACCURACY_WEAK_THRESHOLD}%)`
     } else if (accuracy >= ACCURACY_PROFICIENT_THRESHOLD) {
       tag = 'Proficient Topic'
-      tagColor = '#10B981'
       tagIcon = '🟢'
       tierType = 'strong'
       tierReason = `High acceptance rate (${accuracy}%)`
@@ -456,7 +453,6 @@ export function analyzeTopics(profileData) {
       mediumSolved,
       hardSolved,
       tag,
-      tagColor,
       tagIcon,
       tierType,
       tierReason,

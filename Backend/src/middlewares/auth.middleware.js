@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import config from "../config/config.js";
 import { sessionModel } from "../models/session.model.js";
 
@@ -37,8 +38,12 @@ export async function verifyAccessToken(req, res, next) {
     const requestMethod = req.method.toUpperCase();
 
     // Check if the current route is in the public whitelist
-    const isPublicRoute = ALLOW_PUBLIC_AUTH_ROUTES && PUBLIC_ROUTES.some(
-        route => route.method === requestMethod && route.path === requestPath
+    const isContestRoute = requestPath.startsWith("/api/v1/contests") || requestPath.startsWith("/api/contests");
+    const isPublicRoute = ALLOW_PUBLIC_AUTH_ROUTES && (
+        isContestRoute ||
+        PUBLIC_ROUTES.some(
+            route => route.method === requestMethod && route.path === requestPath
+        )
     );
 
     // Extract access token from Authorization header, cookies, or custom headers
@@ -70,15 +75,19 @@ export async function verifyAccessToken(req, res, next) {
         const decoded = jwt.verify(token, config.JWT_SECRET);
 
         // Verify if session exists and is active (not revoked by logout / logoutAll)
-        if (decoded.sessionId) {
-            const session = await sessionModel.findById(decoded.sessionId);
-            if (!session || session.revoked) {
-                if (isPublicRoute) return next();
-                return res.status(401).json({
-                    message: "Session has been revoked or expired. Please login again."
-                });
+        if (decoded.sessionId && mongoose.connection.readyState === 1) {
+            try {
+                const session = await sessionModel.findById(decoded.sessionId);
+                if (!session || session.revoked) {
+                    if (isPublicRoute) return next();
+                    return res.status(401).json({
+                        message: "Session has been revoked or expired. Please login again."
+                    });
+                }
+                req.session = session;
+            } catch (sessionErr) {
+                console.warn("[Auth] Session validation skipped:", sessionErr.message);
             }
-            req.session = session;
         }
 
         // Attach decoded user info to the request for subsequent handlers

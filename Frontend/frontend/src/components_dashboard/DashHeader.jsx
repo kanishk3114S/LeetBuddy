@@ -1,5 +1,5 @@
 export default function DashHeader({ user, stats }) {
-  const avatarUrl = stats?.profile?.profile?.userAvatar || user?.avatar
+  const avatarUrl = stats?.profile?.profile?.userAvatar || stats?.profile?.userAvatar || stats?.userAvatar || user?.avatar
 
   const initials = user?.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)

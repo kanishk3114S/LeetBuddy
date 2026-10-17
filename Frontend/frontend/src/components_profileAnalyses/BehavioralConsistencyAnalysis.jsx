@@ -14,6 +14,23 @@ import {
   Gauge,
   TrendingUp
 } from 'lucide-react'
+import { useTheme } from '../hooks/useTheme.js'
+
+// Semantic difficulty styling tokens
+const DIFFICULTY_STYLES = {
+  Easy: {
+    text: 'text-emerald-600 dark:text-emerald-400',
+    border: 'border-emerald-500/20 dark:border-emerald-500/30'
+  },
+  Medium: {
+    text: 'text-amber-600 dark:text-amber-400',
+    border: 'border-amber-500/20 dark:border-amber-500/30'
+  },
+  Hard: {
+    text: 'text-rose-600 dark:text-rose-400',
+    border: 'border-rose-500/20 dark:border-rose-500/30'
+  }
+}
 
 // Custom Recharts Tooltip for the Day-of-Week Bar Chart
 function CustomBarTooltip({ active, payload, label }) {
@@ -72,9 +89,9 @@ export default function BehavioralConsistencyAnalysis({ stats }) {
       : '1.4'
 
     const velocityBreakdown = [
-      { difficulty: 'Easy', attempts: 1.2, benchmark: 1.1, color: '#10B981' },
-      { difficulty: 'Medium', attempts: 2.1, benchmark: 1.8, color: '#F59E0B' },
-      { difficulty: 'Hard', attempts: 3.4, benchmark: 3.1, color: '#EF4444' }
+      { difficulty: 'Easy', attempts: 1.2, benchmark: 1.1 },
+      { difficulty: 'Medium', attempts: 2.1, benchmark: 1.8 },
+      { difficulty: 'Hard', attempts: 3.4, benchmark: 3.1 }
     ]
 
     // Consistency Index calculation (0 - 100)
@@ -142,6 +159,10 @@ export default function BehavioralConsistencyAnalysis({ stats }) {
     }
   }, [stats])
 
+  const { isDarkMode } = useTheme()
+  const tickColor = isDarkMode ? '#94a3b8' : '#64748b'
+  const axisLineColor = isDarkMode ? '#334155' : '#cbd5e1'
+
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-5 sm:p-6 shadow-xs dark:border-neutral-800 dark:bg-neutral-900 transition-colors">
       {/* ── Section Header ── */}
@@ -175,7 +196,7 @@ export default function BehavioralConsistencyAnalysis({ stats }) {
       {/* ── Metric Callout Cards: Best Day, Streak & Velocity ── */}
       <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         {/* Card 1: Best Performing Day */}
-        <div className="rounded-xl border border-neutral-200/90 bg-neutral-50/80 p-4 dark:border-neutral-800/60 dark:bg-neutral-950/40">
+        <div className="rounded-xl border border-neutral-200/90 bg-neutral-50/80 p-4 dark:border-neutral-800/60 dark:bg-neutral-950/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs">
           <div className="flex items-center justify-between">
             <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Peak Performance Day
@@ -193,7 +214,7 @@ export default function BehavioralConsistencyAnalysis({ stats }) {
         </div>
 
         {/* Card 2: Streak & Active Days */}
-        <div className="rounded-xl border border-neutral-200/90 bg-neutral-50/80 p-4 dark:border-neutral-800/60 dark:bg-neutral-950/40">
+        <div className="rounded-xl border border-neutral-200/90 bg-neutral-50/80 p-4 dark:border-neutral-800/60 dark:bg-neutral-950/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs">
           <div className="flex items-center justify-between">
             <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Active Streak & Tenacity
@@ -300,13 +321,13 @@ export default function BehavioralConsistencyAnalysis({ stats }) {
               <BarChart data={data.dayOfWeekStats} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
                 <XAxis
                   dataKey="day"
-                  tick={{ fill: '#64748b', fontSize: 10, fontFamily: 'monospace' }}
-                  axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.6 }}
+                  tick={{ fill: tickColor, fontSize: 10, fontFamily: 'monospace' }}
+                  axisLine={{ stroke: axisLineColor, strokeOpacity: 0.6 }}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: '#64748b', fontSize: 9, fontFamily: 'monospace' }}
-                  axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.6 }}
+                  tick={{ fill: tickColor, fontSize: 9, fontFamily: 'monospace' }}
+                  axisLine={{ stroke: axisLineColor, strokeOpacity: 0.6 }}
                   tickLine={false}
                 />
                 <Tooltip content={<CustomBarTooltip />} />
@@ -314,7 +335,13 @@ export default function BehavioralConsistencyAnalysis({ stats }) {
                   {data.dayOfWeekStats.map((entry, index) => (
                     <Cell
                       key={`bar-${index}`}
-                      fill={entry.day === 'Sat' ? '#10B981' : entry.day === 'Thu' ? '#F59E0B' : '#6366F1'}
+                      fill={
+                        entry.day === 'Sat'
+                          ? (isDarkMode ? '#34d399' : '#10b981')
+                          : entry.day === 'Thu'
+                          ? (isDarkMode ? '#fbbf24' : '#f59e0b')
+                          : (isDarkMode ? '#818cf8' : '#6366f1')
+                      }
                     />
                   ))}
                 </Bar>
@@ -328,19 +355,25 @@ export default function BehavioralConsistencyAnalysis({ stats }) {
               Attempts Needed per Problem
             </span>
             <div className="grid grid-cols-3 gap-2 text-center">
-              {data.velocityBreakdown.map((v) => (
-                <div key={v.difficulty} className="rounded-lg border border-neutral-200 bg-white p-2 shadow-xs dark:border-neutral-800 dark:bg-neutral-900/60">
-                  <span className="text-[10px] font-mono font-bold block" style={{ color: v.color }}>
-                    {v.difficulty}
-                  </span>
-                  <span className="text-sm font-black font-mono text-neutral-900 dark:text-neutral-100">
-                    {v.attempts}x
-                  </span>
-                  <span className="text-[9px] text-neutral-500 dark:text-neutral-400 block font-mono">
-                    Bench: {v.benchmark}x
-                  </span>
-                </div>
-              ))}
+              {data.velocityBreakdown.map((v) => {
+                const diffStyle = DIFFICULTY_STYLES[v.difficulty] || DIFFICULTY_STYLES.Medium
+                return (
+                  <div
+                    key={v.difficulty}
+                    className={`rounded-lg border p-2 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs bg-white dark:bg-neutral-900/60 ${diffStyle.border}`}
+                  >
+                    <span className={`text-[10px] font-mono font-bold block ${diffStyle.text}`}>
+                      {v.difficulty}
+                    </span>
+                    <span className="text-sm font-black font-mono text-neutral-900 dark:text-neutral-100">
+                      {v.attempts}x
+                    </span>
+                    <span className="text-[9px] text-neutral-500 dark:text-neutral-400 block font-mono">
+                      Bench: {v.benchmark}x
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>

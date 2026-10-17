@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { calculateRank } from '../utils/rankings.js'
 import { analyzeTopics } from '../utils/topicData.js'
+import { normalizeProfileData, formatGraphQLResponse } from '../utils/profileData.js'
 import BadgeImage from '../components_profileAnalyses/BadgeImage.jsx'
 
 const DIRECT_STATS_QUERY = `
@@ -76,10 +77,11 @@ function ActivityHeatmap({ calendar, selectedYear }) {
     const dayMap = {}
     let totalSubs = 0
 
-    if (calendar) {
+    if (calendar && typeof calendar === 'object') {
       const entries = calendar instanceof Map ? Array.from(calendar.entries()) : Object.entries(calendar)
       for (const [key, count] of entries) {
         const ts = Number(key)
+        if (isNaN(ts) || ts <= 0) continue
         const d = new Date(ts * 1000)
         if (d.getFullYear() === selectedYear) {
           const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -143,10 +145,10 @@ function ActivityHeatmap({ calendar, selectedYear }) {
     if (!day) return 'opacity-0 pointer-events-none'
     if (day.isFuture) return 'bg-neutral-100 dark:bg-neutral-800/40 opacity-40'
     if (day.count === 0) return 'bg-neutral-200/60 dark:bg-neutral-800'
-    if (day.count <= 2) return 'bg-[#9be9a8] dark:bg-[#1e4620]'
-    if (day.count <= 4) return 'bg-[#40c463] dark:bg-[#2e7d32]'
-    if (day.count <= 7) return 'bg-[#30a14e] dark:bg-[#388e3c]'
-    return 'bg-[#216e39] dark:bg-[#4caf50]'
+    if (day.count <= 2) return 'bg-emerald-200 dark:bg-emerald-950/80'
+    if (day.count <= 4) return 'bg-emerald-400 dark:bg-emerald-800'
+    if (day.count <= 7) return 'bg-emerald-500 dark:bg-emerald-600'
+    return 'bg-emerald-600 dark:bg-emerald-500'
   }
 
   return {
@@ -184,10 +186,10 @@ function ActivityHeatmap({ calendar, selectedYear }) {
           <div className="mt-4 flex items-center justify-end gap-1.5 text-[11px] text-neutral-500 dark:text-neutral-400">
             <span>Less</span>
             <span className="h-[10px] w-[10px] rounded-[2px] bg-neutral-200/60 dark:bg-neutral-800" />
-            <span className="h-[10px] w-[10px] rounded-[2px] bg-[#9be9a8] dark:bg-[#1e4620]" />
-            <span className="h-[10px] w-[10px] rounded-[2px] bg-[#40c463] dark:bg-[#2e7d32]" />
-            <span className="h-[10px] w-[10px] rounded-[2px] bg-[#30a14e] dark:bg-[#388e3c]" />
-            <span className="h-[10px] w-[10px] rounded-[2px] bg-[#216e39] dark:bg-[#4caf50]" />
+            <span className="h-[10px] w-[10px] rounded-[2px] bg-emerald-200 dark:bg-emerald-950/80" />
+            <span className="h-[10px] w-[10px] rounded-[2px] bg-emerald-400 dark:bg-emerald-800" />
+            <span className="h-[10px] w-[10px] rounded-[2px] bg-emerald-500 dark:bg-emerald-600" />
+            <span className="h-[10px] w-[10px] rounded-[2px] bg-emerald-600 dark:bg-emerald-500" />
             <span>More</span>
           </div>
         </div>
@@ -199,13 +201,17 @@ function ActivityHeatmap({ calendar, selectedYear }) {
 // ── Main StatsView (Dashboard Action Hub) ───────────────────────────────────
 export default function StatsView({ stats, onStatsUpdate }) {
   const navigate = useNavigate()
-  const profileData = stats?.profile || {}
-  const username = stats?.username || 'user'
 
+  // 1. Normalize data structure to ensure 100% contract compatibility
+  const profileData = useMemo(() => normalizeProfileData(stats), [stats])
+
+  const username = profileData?.username || 'user'
   const s = profileData?.stats || {}
   const act = profileData?.activity || {}
   const badges = profileData?.badges || []
   const activeBadge = profileData?.activeBadge || badges[0]
+  const profileMeta = profileData?.profile || {}
+  const calendar = useMemo(() => profileData?.submissionCalendar || {}, [profileData?.submissionCalendar])
 
   // Refresh & Sync states
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -281,6 +287,14 @@ export default function StatsView({ stats, onStatsUpdate }) {
               profile: result.profile
             }
           }
+          if (result?.contest) {
+            try {
+              localStorage.setItem('lb_contest', JSON.stringify(result.contest))
+              window.dispatchEvent(new CustomEvent('lb_contest_updated', { detail: result.contest }))
+            } catch (e) {
+              console.warn('LocalStorage contest save error', e)
+            }
+          }
         } else if (res.status === 429) {
           const errRes = await res.json()
           const waitSec = errRes.cooldownSeconds || 10
@@ -293,7 +307,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
         console.warn('Backend refresh failed, trying proxy fallback:', backendErr)
       }
 
-      // 2. Fallback: If backend is unreachable or local development proxy mode, query /leetcode-proxy directly
+      // 2. Fallback: Query /leetcode-proxy directly with full data formatting
       if (!refreshedData) {
         const proxyRes = await fetch('/leetcode-proxy', {
           method: 'POST',
@@ -308,51 +322,8 @@ export default function StatsView({ stats, onStatsUpdate }) {
           const gqlData = await proxyRes.json()
           const matchedUser = gqlData?.data?.matchedUser
           if (matchedUser) {
-            const allQList = gqlData?.data?.allQuestionsCount || []
-            const acList = matchedUser?.submitStatsGlobal?.acSubmissionNum || []
-            const totalSubList = matchedUser?.submitStatsGlobal?.totalSubmissionNum || []
-
-            const totalSolved = acList.find(x => x.difficulty === 'All')?.count || 0
-            const easySolved = acList.find(x => x.difficulty === 'Easy')?.count || 0
-            const mediumSolved = acList.find(x => x.difficulty === 'Medium')?.count || 0
-            const hardSolved = acList.find(x => x.difficulty === 'Hard')?.count || 0
-
-            const acceptedSubmissions = acList.find(x => x.difficulty === 'All')?.submissions || 0
-            const totalSubmissions = totalSubList.find(x => x.difficulty === 'All')?.submissions || 0
-            const acceptanceRate = totalSubmissions > 0 ? Number(((acceptedSubmissions / totalSubmissions) * 100).toFixed(1)) : 0
-
-            const leetBuddyPoints = (easySolved * 1) + (mediumSolved * 3) + (hardSolved * 5)
-
-            // Preserve existing heroCard, badges, etc.
-            const updatedProfile = {
-              ...(profileData || {}),
-              stats: {
-                ...(profileData?.stats || {}),
-                totalSolved,
-                easySolved,
-                mediumSolved,
-                hardSolved,
-                totalSubmissions,
-                acceptedSubmissions,
-                acceptanceRate,
-                leetBuddyPoints
-              },
-              allQuestionsCount: {
-                all: allQList.find(x => x.difficulty === 'All')?.count || 0,
-                easy: allQList.find(x => x.difficulty === 'Easy')?.count || 0,
-                medium: allQList.find(x => x.difficulty === 'Medium')?.count || 0,
-                hard: allQList.find(x => x.difficulty === 'Hard')?.count || 0
-              },
-              profile: {
-                ...(profileData?.profile || {}),
-                ranking: matchedUser.profile?.ranking || profileData?.profile?.ranking || 0,
-                userAvatar: matchedUser.profile?.userAvatar || profileData?.profile?.userAvatar || '',
-                realName: matchedUser.profile?.realName || profileData?.profile?.realName || '',
-                aboutMe: matchedUser.profile?.aboutMe || profileData?.profile?.aboutMe || ''
-              }
-            }
-
-            refreshedData = { username, profile: updatedProfile }
+            const formatted = formatGraphQLResponse(matchedUser, gqlData?.data?.allQuestionsCount || [])
+            refreshedData = { username, profile: formatted }
           }
         }
       }
@@ -363,16 +334,19 @@ export default function StatsView({ stats, onStatsUpdate }) {
         setRecentlyUpdated(true)
         setTimeout(() => setRecentlyUpdated(false), 3000)
 
-        // Update localStorage and call onStatsUpdate
+        // Update localStorage and trigger global notification
         localStorage.setItem('lb_stats', JSON.stringify(refreshedData))
         if (onStatsUpdate) {
           onStatsUpdate(refreshedData)
         }
         window.dispatchEvent(new CustomEvent('lb_stats_updated', { detail: refreshedData }))
 
+        const points = refreshedData.profile?.stats?.leetBuddyPoints ?? 0
+        const solved = refreshedData.profile?.stats?.totalSolved ?? 0
+
         setRefreshNotice({
           type: 'success',
-          text: `Synced! ${refreshedData.profile?.stats?.totalSolved || 0} solved (${(refreshedData.profile?.stats?.leetBuddyPoints || 0).toLocaleString()} pts)`
+          text: `Synced! ${solved} solved (${points.toLocaleString()} pts)`
         })
       } else {
         setRefreshNotice({ type: 'error', text: 'Could not fetch fresh data. Please try again.' })
@@ -398,14 +372,14 @@ export default function StatsView({ stats, onStatsUpdate }) {
   const [selectedYear, setSelectedYear] = useState(availableYears[0] || currentYear)
 
   const { yearTotalSubmissions, renderHeatmap } = ActivityHeatmap({
-    calendar: profileData?.submissionCalendar,
+    calendar,
     selectedYear
   })
 
-  // ── Topic Mastery Analysis for Daily Action Hub ──────────────────────────
+  // ── Topic Mastery Analysis with Normalized Profile Contract ─────────────
   const analyzedTopics = useMemo(() => {
-    return analyzeTopics(profileData?.topics || [], s?.acceptanceRate || 68)
-  }, [profileData?.topics, s?.acceptanceRate])
+    return analyzeTopics(profileData)
+  }, [profileData])
 
   const weakTopics = useMemo(() => {
     return analyzedTopics.filter((t) => t.tierType === 'weak')
@@ -436,8 +410,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
 
   // ── 7-Day Velocity & Recent Activity Calendar Calculations ───────────────
   const { sevenDaySubmissions, sevenDayActiveDays, last7DaysList, recentActiveDays } = useMemo(() => {
-    const calendar = profileData?.submissionCalendar
-    if (!calendar) {
+    if (!calendar || Object.keys(calendar).length === 0) {
       return { sevenDaySubmissions: 0, sevenDayActiveDays: 0, last7DaysList: [], recentActiveDays: [] }
     }
 
@@ -447,6 +420,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
 
     for (const [key, count] of entries) {
       const ts = Number(key)
+      if (isNaN(ts) || ts <= 0) continue
       const d = new Date(ts * 1000)
       const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
       const c = Number(count)
@@ -486,7 +460,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
       last7DaysList,
       recentActiveDays
     }
-  }, [profileData?.submissionCalendar])
+  }, [calendar])
 
   const max7DayCount = useMemo(() => {
     const counts = last7DaysList.map((d) => d.count)
@@ -503,9 +477,9 @@ export default function StatsView({ stats, onStatsUpdate }) {
         <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
           {/* 1. Profile Photo */}
           <div className="relative shrink-0">
-            {profileData?.profile?.userAvatar ? (
+            {profileMeta?.userAvatar ? (
               <img
-                src={profileData.profile.userAvatar}
+                src={profileMeta.userAvatar}
                 alt={username}
                 className="h-12 w-12 sm:h-13 sm:w-13 rounded-full border-2 border-neutral-200 object-cover shadow-xs dark:border-neutral-700"
               />
@@ -545,7 +519,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
               </span>
             </div>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate mt-0.5">
-              {profileData?.profile?.realName || 'LeetCode Competitive Programmer'} • Rank #{profileData?.profile?.ranking?.toLocaleString() || 'N/A'}
+              {profileMeta?.realName || 'LeetCode Competitive Programmer'} • Rank #{profileMeta?.ranking?.toLocaleString() || 'N/A'}
             </p>
           </div>
         </div>
@@ -627,7 +601,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
       {/* ── Daily Action Grid (4 Key Metrics) ──────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Card 1: Active Streak */}
-        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4.5 shadow-xs dark:border-neutral-800/80 dark:bg-neutral-900/90 transition-colors">
+        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4.5 shadow-xs dark:border-neutral-800/80 dark:bg-neutral-900/90 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <div className="flex items-center justify-between">
             <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Active Streak
@@ -653,7 +627,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
         </div>
 
         {/* Card 2: Priority Weak Topics */}
-        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4.5 shadow-xs dark:border-neutral-800/80 dark:bg-neutral-900/90 transition-colors">
+        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4.5 shadow-xs dark:border-neutral-800/80 dark:bg-neutral-900/90 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <div className="flex items-center justify-between">
             <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Weak Topics
@@ -679,7 +653,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
         </div>
 
         {/* Card 3: 7-Day Velocity */}
-        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4.5 shadow-xs dark:border-neutral-800/80 dark:bg-neutral-900/90 transition-colors">
+        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4.5 shadow-xs dark:border-neutral-800/80 dark:bg-neutral-900/90 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <div className="flex items-center justify-between">
             <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               7-Day Velocity
@@ -705,7 +679,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
         </div>
 
         {/* Card 4: Topic Mastery Index */}
-        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4.5 shadow-xs dark:border-neutral-800/80 dark:bg-neutral-900/90 transition-colors">
+        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4.5 shadow-xs dark:border-neutral-800/80 dark:bg-neutral-900/90 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <div className="flex items-center justify-between">
             <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Topic Mastery
@@ -751,7 +725,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
           <button
             type="button"
             onClick={() => navigate('/topic-mastery')}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-bold text-neutral-700 hover:border-neutral-300 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700/80 transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-bold text-neutral-700 hover:border-neutral-300 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700/80 active:scale-95 transition-all duration-150 cursor-pointer"
           >
             <span>Open Topic Mastery</span>
             <ChevronRight className="h-3.5 w-3.5" />
@@ -764,7 +738,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
             {topFocusTopics.map((topic) => (
               <div
                 key={topic.name}
-                className="flex flex-col justify-between rounded-xl border border-neutral-200/80 bg-neutral-50/70 p-4 dark:border-neutral-800 dark:bg-neutral-950/40 transition hover:border-neutral-300 dark:hover:border-neutral-700"
+                className="flex flex-col justify-between rounded-xl border border-neutral-200/80 bg-neutral-50/70 p-4 dark:border-neutral-800 dark:bg-neutral-950/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-neutral-300 dark:hover:border-neutral-700"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-2">
@@ -789,13 +763,13 @@ export default function StatsView({ stats, onStatsUpdate }) {
 
                 <div className="pt-3 border-t border-neutral-200/70 dark:border-neutral-800/80 flex items-center justify-between gap-2">
                   <div className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
-                    <span className="font-bold text-neutral-900 dark:text-neutral-100">{topic.volume}</span> solved • <span className="font-bold text-neutral-900 dark:text-neutral-100">{topic.accuracy}%</span> acc
+                    <span className="font-bold text-neutral-900 dark:text-neutral-200">{topic.volume}</span> solved • <span className="font-bold text-neutral-900 dark:text-neutral-200">{topic.accuracy}%</span> acc
                   </div>
                   <a
                     href={topic.practiceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-md bg-neutral-900 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-white transition shadow-2xs"
+                    className="inline-flex items-center gap-1 rounded-md bg-neutral-900 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-white active:scale-95 transition-all duration-150 shadow-2xs"
                   >
                     <span>Practice</span>
                     <ArrowUpRight className="h-3 w-3" />
@@ -845,7 +819,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
         {/* Stat Pills & Badges Row */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-3.5 mb-6">
           {/* Active Streak */}
-          <div className="flex items-center gap-3.5 rounded-xl border border-neutral-200/80 bg-neutral-50/70 px-4 py-3.5 dark:border-neutral-800 dark:bg-neutral-950/40">
+          <div className="flex items-center gap-3.5 rounded-xl border border-neutral-200/80 bg-neutral-50/70 px-4 py-3.5 dark:border-neutral-800 dark:bg-neutral-950/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-500/10 text-lg">
               🔥
             </span>
@@ -853,14 +827,14 @@ export default function StatsView({ stats, onStatsUpdate }) {
               <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                 ACTIVE STREAK
               </p>
-              <p className="text-[17px] font-extrabold text-[#ea580c] dark:text-[#f97316]">
+              <p className="text-[17px] font-extrabold text-orange-600 dark:text-orange-400">
                 {act?.currentStreak || 0} Days
               </p>
             </div>
           </div>
 
           {/* Active Days */}
-          <div className="flex items-center gap-3.5 rounded-xl border border-neutral-200/80 bg-neutral-50/70 px-4 py-3.5 dark:border-neutral-800 dark:bg-neutral-950/40">
+          <div className="flex items-center gap-3.5 rounded-xl border border-neutral-200/80 bg-neutral-50/70 px-4 py-3.5 dark:border-neutral-800 dark:bg-neutral-950/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-lg">
               📅
             </span>
@@ -868,14 +842,14 @@ export default function StatsView({ stats, onStatsUpdate }) {
               <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                 ACTIVE DAYS
               </p>
-              <p className="text-[17px] font-extrabold text-[#2563eb] dark:text-[#3b82f6]">
+              <p className="text-[17px] font-extrabold text-blue-600 dark:text-blue-400">
                 {act?.totalActiveDays || 0} Days
               </p>
             </div>
           </div>
 
           {/* Year Submissions */}
-          <div className="flex items-center gap-3.5 rounded-xl border border-neutral-200/80 bg-neutral-50/70 px-4 py-3.5 dark:border-neutral-800 dark:bg-neutral-950/40">
+          <div className="flex items-center gap-3.5 rounded-xl border border-neutral-200/80 bg-neutral-50/70 px-4 py-3.5 dark:border-neutral-800 dark:bg-neutral-950/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-lg">
               ✅
             </span>
@@ -883,14 +857,14 @@ export default function StatsView({ stats, onStatsUpdate }) {
               <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                 YEAR {selectedYear}
               </p>
-              <p className="text-[17px] font-extrabold text-[#16a34a] dark:text-[#22c55e]">
+              <p className="text-[17px] font-extrabold text-emerald-600 dark:text-emerald-400">
                 {yearTotalSubmissions.toLocaleString()} Submissions
               </p>
             </div>
           </div>
 
           {/* Badges Box */}
-          <div className="rounded-xl border border-neutral-200/80 bg-neutral-50/70 p-3 dark:border-neutral-800 dark:bg-neutral-950/40">
+          <div className="rounded-xl border border-neutral-200/80 bg-neutral-50/70 p-3 dark:border-neutral-800 dark:bg-neutral-950/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
                 {badges.length} Badges Earned
@@ -915,7 +889,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
                 <span className="block font-mono text-[9px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                   MOST RECENT BADGE
                 </span>
-                <span className="font-bold text-xs text-[#ea580c] dark:text-[#f97316] truncate block">
+                <span className="font-bold text-xs text-orange-600 dark:text-orange-400 truncate block">
                   {activeBadge.name}
                 </span>
               </div>
@@ -930,7 +904,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
       {/* ── 7-Day Velocity & Recent Activity (Action Pulse) ───────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left: 7-Day Velocity Rhythm */}
-        <div className="rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-sm dark:border-neutral-800/80 dark:bg-neutral-900/90 transition-colors">
+        <div className="rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-sm dark:border-neutral-800/80 dark:bg-neutral-900/90 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-[15px] font-bold text-neutral-900 dark:text-neutral-100">
@@ -950,13 +924,13 @@ export default function StatsView({ stats, onStatsUpdate }) {
             {last7DaysList.map((day) => {
               const heightPct = day.count > 0 ? Math.max(18, Math.round((day.count / max7DayCount) * 100)) : 8
               return (
-                <div key={day.dateStr} className="flex flex-col items-center gap-1.5 h-full justify-end">
-                  <span className="font-mono text-[10px] font-bold text-neutral-500 dark:text-neutral-400">
+                <div key={day.dateStr} className="flex flex-col items-center gap-1.5 h-full justify-end group cursor-pointer">
+                  <span className="font-mono text-[10px] font-bold text-neutral-500 dark:text-neutral-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                     {day.count > 0 ? day.count : '-'}
                   </span>
-                  <div className="w-full max-w-[28px] h-20 rounded-lg bg-neutral-100 dark:bg-neutral-800/80 flex items-end overflow-hidden p-0.5">
+                  <div className="w-full max-w-[28px] h-20 rounded-lg bg-neutral-100 dark:bg-neutral-800/80 flex items-end overflow-hidden p-0.5 group-hover:ring-1 group-hover:ring-emerald-500/40 transition-all">
                     <div
-                      className={`w-full rounded-md transition-all duration-500 ${
+                      className={`w-full rounded-md transition-all duration-300 group-hover:brightness-110 ${
                         day.count > 0
                           ? day.isToday
                             ? 'bg-emerald-500'
@@ -968,8 +942,8 @@ export default function StatsView({ stats, onStatsUpdate }) {
                     />
                   </div>
                   <span
-                    className={`font-mono text-[10px] uppercase font-bold ${
-                      day.isToday ? 'text-emerald-600 dark:text-emerald-400' : 'text-neutral-400 dark:text-neutral-500'
+                    className={`font-mono text-[10px] uppercase font-bold transition-colors ${
+                      day.isToday ? 'text-emerald-600 dark:text-emerald-400' : 'text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300'
                     }`}
                   >
                     {day.dayName}
@@ -981,7 +955,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
         </div>
 
         {/* Right: Recent Activity Log */}
-        <div className="rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-sm dark:border-neutral-800/80 dark:bg-neutral-900/90 transition-colors">
+        <div className="rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-sm dark:border-neutral-800/80 dark:bg-neutral-900/90 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-[15px] font-bold text-neutral-900 dark:text-neutral-100">
@@ -1001,7 +975,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
               {recentActiveDays.map((item, idx) => (
                 <div
                   key={item.dateStr || idx}
-                  className="flex items-center justify-between rounded-xl border border-neutral-100 bg-neutral-50/70 px-3.5 py-2.5 dark:border-neutral-800/60 dark:bg-neutral-950/40"
+                  className="flex items-center justify-between rounded-xl border border-neutral-100 bg-neutral-50/70 px-3.5 py-2.5 dark:border-neutral-800/60 dark:bg-neutral-950/40 transition-all duration-150 hover:bg-neutral-100/90 dark:hover:bg-neutral-900/90"
                 >
                   <div className="flex items-center gap-3">
                     <span className="flex h-2 w-2 rounded-full bg-emerald-500" />

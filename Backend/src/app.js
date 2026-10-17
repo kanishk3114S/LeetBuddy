@@ -5,6 +5,8 @@ import { leetcodeRouter } from "./routes/leetcode.routes.js"
 import cookieParser from "cookie-parser"
 import { verifyAccessToken } from "./middlewares/auth.middleware.js"
 
+import { contestRouter } from "./routes/contest.routes.js"
+
 export const app = express()
 app.use(cookieParser())
 
@@ -19,3 +21,5 @@ app.use(verifyAccessToken)
 app.use("/api/auth", authRouter)
 app.use("/api/leetcode", leetcodeRouter)
 app.use("/api/v1/leetcode", leetcodeRouter)
+app.use("/api/v1/contests", contestRouter)
+app.use("/api/contests", contestRouter)

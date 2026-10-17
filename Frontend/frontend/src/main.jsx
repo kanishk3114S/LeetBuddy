@@ -7,6 +7,7 @@ import Auth from './Auth.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import ProfileAnalysis from './pages/ProfileAnalysis.jsx'
 import TopicMastery from './pages/TopicMastery.jsx'
+import ContestAnalysis from './pages/ContestAnalysis.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 
 //ReactJS gets a DOM container [by the name of root] and renders the every JSX components which are written in Java Script style to render the HTML like components//
@@ -27,6 +28,9 @@ const ourRouter = createBrowserRouter(
       <Route path ='/profile' element = {<ProfileAnalysis/>}/>
       <Route path ='/topic-mastery' element = {<TopicMastery/>}/>
       <Route path ='/practice' element = {<TopicMastery/>}/>
+      <Route path ='/contest-analysis' element = {<ContestAnalysis/>}/>
+      <Route path ='/contests' element = {<ContestAnalysis/>}/>
+      <Route path ='/contest' element = {<ContestAnalysis/>}/>
     </Route>
   )
 )
