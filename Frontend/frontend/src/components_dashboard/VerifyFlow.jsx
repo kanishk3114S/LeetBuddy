@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { formatGraphQLResponse } from '../utils/profileData.js'
 
 // Pure alphanumeric token generator
 function generateRandomToken() {
@@ -282,22 +281,32 @@ export default function VerifyFlow({ onVerified }) {
     setIsGenerating(true)
     setError('')
 
-    const generated = generateRandomToken()
-    setToken(generated)
-
-    // Attempt to register pending token on backend if available
     try {
       const authToken = localStorage.getItem('accessToken') || localStorage.getItem('lb_token')
-      await fetch('/api/leetcode/generate-token', {
+      const res = await fetch('/api/leetcode/generate-token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
         },
+        credentials: 'include',
         body: JSON.stringify({ leetcodeUsername: uname })
       })
+
+      if (res.ok) {
+        const data = await res.json()
+        setToken(data.token || generateRandomToken())
+      } else {
+        const err = await res.json().catch(() => ({}))
+        if (res.status === 401) {
+          setError('Authentication required. Please log in first.')
+          return
+        }
+        setError(err.error || 'Failed to generate token on backend.')
+        setToken(generateRandomToken())
+      }
     } catch {
-      // Offline fallback: locally generated token is ready
+      setToken(generateRandomToken())
     } finally {
       setIsGenerating(false)
       setStep('token')
@@ -307,122 +316,50 @@ export default function VerifyFlow({ onVerified }) {
   const handleVerify = async () => {
     setStep('loading')
     setError('')
-    setLoadingText('Connecting to LeetCode...')
+    setLoadingText('Connecting to LeetCode & syncing database...')
 
     try {
-      // 1. Try backend verification endpoint
       const authToken = localStorage.getItem('accessToken') || localStorage.getItem('lb_token')
-      let backendSuccess = false
 
-      try {
-        const res = await fetch('/api/leetcode/verify', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
-          }
-        })
+      const res = await fetch('/api/leetcode/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+        },
+        credentials: 'include',
+        body: JSON.stringify({ username, token })
+      })
 
-        if (res.ok) {
-          const data = await res.json()
-          if (data?.profile) {
-            backendSuccess = true
-            if (data?.heroCard) {
-              try {
-                localStorage.setItem('lb_hero_card', JSON.stringify(data.heroCard))
-                window.dispatchEvent(new CustomEvent('lb_hero_card_updated', { detail: data.heroCard }))
-              } catch (e) {
-                console.warn('LocalStorage save error', e)
-              }
-            }
-            if (data?.contest) {
-              try {
-                localStorage.setItem('lb_contest', JSON.stringify(data.contest))
-                window.dispatchEvent(new CustomEvent('lb_contest_updated', { detail: data.contest }))
-              } catch (e) {
-                console.warn('LocalStorage contest save error', e)
-              }
-            }
-            onVerified({ username: data.username || username, profile: data.profile })
-            return
+      const data = await res.json().catch(() => ({}))
+
+      if (res.ok && data?.profile) {
+        if (data?.heroCard) {
+          try {
+            localStorage.setItem('lb_hero_card', JSON.stringify(data.heroCard))
+            window.dispatchEvent(new CustomEvent('lb_hero_card_updated', { detail: data.heroCard }))
+          } catch (e) {
+            console.warn('LocalStorage save error', e)
           }
-        } else if (res.status === 400) {
-          const errData = await res.json()
-          setError(errData.error || 'Token not found in LeetCode bio. Please make sure you saved it and try again.')
-          setStep('token')
-          return
         }
-      } catch {
-        // Fall back to direct proxy verification
+        if (data?.contest) {
+          try {
+            localStorage.setItem('lb_contest', JSON.stringify(data.contest))
+            window.dispatchEvent(new CustomEvent('lb_contest_updated', { detail: data.contest }))
+          } catch (e) {
+            console.warn('LocalStorage contest save error', e)
+          }
+        }
+        localStorage.setItem('lb_username', data.username || username)
+        onVerified({ username: data.username || username, profile: data.profile })
+        return
       }
 
-      // 2. Direct GraphQL query via Vite Proxy if backend is in local frontend-only mode
-      if (!backendSuccess) {
-        setLoadingText('Checking About Me bio on LeetCode...')
-
-        const proxyRes = await fetch('/leetcode-proxy', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: DIRECT_STATS_QUERY,
-            variables: { username }
-          })
-        })
-
-        if (!proxyRes.ok) {
-          const errText = await proxyRes.text()
-          throw new Error(`LeetCode connection error (${proxyRes.status}): ${errText.slice(0, 100) || 'Check server connection'}`)
-        }
-
-        const gqlData = await proxyRes.json()
-        const user = gqlData?.data?.matchedUser
-
-        if (!user) {
-          setError(`LeetCode user "@${username}" was not found. Please check spelling.`)
-          setStep('token')
-          return
-        }
-
-        const bio = user?.profile?.aboutMe || ''
-
-        // Bio Match check (case-sensitive token match, ignoring extraneous whitespace)
-        const cleanBio = bio.replace(/\s+/g, ' ')
-        const cleanToken = token.trim()
-
-        if (!cleanBio.includes(cleanToken)) {
-          setError(`Token "${token}" was not found in your LeetCode "About Me" bio. Please paste it, click Save on LeetCode, and try again.`)
-          setStep('token')
-          return
-        }
-
-        // Bio matches! Format real data
-        const formattedProfile = formatGraphQLResponse(user, gqlData?.data?.allQuestionsCount || [])
-
-        // Asynchronously request AI Hero Card from backend AI service
-        fetch('/api/leetcode/hero-card', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ profileData: formattedProfile, username })
-        })
-          .then(r => r.json())
-          .then(c => {
-            if (c?.heroCard) {
-              try {
-                localStorage.setItem('lb_hero_card', JSON.stringify(c.heroCard))
-                window.dispatchEvent(new CustomEvent('lb_hero_card_updated', { detail: c.heroCard }))
-              } catch (e) {
-                console.warn('LocalStorage save error', e)
-              }
-            }
-          })
-          .catch(e => console.warn('Background hero card error:', e))
-
-        onVerified({ username, profile: formattedProfile })
-      }
-
+      setError(data.error || data.message || 'Verification failed. Please make sure your token is saved in your LeetCode bio.')
+      setStep('token')
     } catch (err) {
-      console.error('Verification error:', err)
-      setError(err?.message || 'Connection error while communicating with LeetCode. Please try again.')
+      console.error('[VerifyFlow] Verification error:', err)
+      setError('Network error contacting backend. Please verify your connection.')
       setStep('token')
     }
   }

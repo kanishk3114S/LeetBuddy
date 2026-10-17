@@ -8,6 +8,7 @@ import {
 export const contestRouter = Router();
 
 // GET /api/v1/contests/me (authenticated user's contest telemetry)
+//agar logged in user aa jaye toh dubara verify na karna pade
 contestRouter.get("/me", getMyContest);
 
 // POST /api/v1/contests/sync (trigger sync for authenticated or specified user)

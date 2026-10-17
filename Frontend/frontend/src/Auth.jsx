@@ -17,15 +17,129 @@ function Auth() {
   const [isLogin, setIsLogin] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
   const [form, setForm] = useState({ username: '', email: '', password: '' })
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
 
-  const updateField = (event) => setForm({ ...form, [event.target.name]: event.target.value })
+  const updateField = (event) => {
+    setError('')
+    setForm({ ...form, [event.target.name]: event.target.value })
+  }
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault()
-    localStorage.setItem('lb_email', form.email)
-    if (form.username) localStorage.setItem('lb_name', form.username)
-    navigate('/dashboard')
+    setError('')
+    setIsLoading(true)
+
+    try {
+      if (isLogin) {
+        // Real Login Request
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            email: form.email.trim(),
+            password: form.password
+          })
+        })
+
+        const data = await res.json()
+        if (!res.ok) {
+          setError(data.message || 'Invalid email or password')
+          setIsLoading(false)
+          return
+        }
+
+        // Store active session access token
+        localStorage.setItem('accessToken', data.token)
+        localStorage.setItem('lb_token', data.token)
+        localStorage.setItem('lb_email', form.email.trim())
+
+        // Fetch user info from session
+        try {
+          const meRes = await fetch('/api/auth/me', {
+            headers: { Authorization: `Bearer ${data.token}` },
+            credentials: 'include'
+          })
+          if (meRes.ok) {
+            const meData = await meRes.json()
+            if (meData?.user?.username) {
+              localStorage.setItem('lb_name', meData.user.username)
+            }
+            if (meData?.user?.leetcode?.username) {
+              localStorage.setItem('lb_username', meData.user.leetcode.username)
+            }
+          }
+
+          // Hydrate profile data from DB if user was previously verified
+          const profileRes = await fetch('/api/leetcode/profile', {
+            headers: { Authorization: `Bearer ${data.token}` },
+            credentials: 'include'
+          })
+          if (profileRes.ok) {
+            const profilePayload = await profileRes.json()
+            if (profilePayload?.profile) {
+              localStorage.setItem('lb_stats', JSON.stringify({
+                username: profilePayload.username || profilePayload.user?.leetcode?.username,
+                profile: profilePayload.profile
+              }))
+              if (profilePayload.profile.heroCard) {
+                localStorage.setItem('lb_hero_card', JSON.stringify(profilePayload.profile.heroCard))
+              }
+            }
+          }
+
+          // Hydrate contest data from DB if available
+          const contestRes = await fetch('/api/v1/contests/me', {
+            headers: { Authorization: `Bearer ${data.token}` },
+            credentials: 'include'
+          })
+          if (contestRes.ok) {
+            const contestPayload = await contestRes.json()
+            if (contestPayload?.contest) {
+              localStorage.setItem('lb_contest', JSON.stringify(contestPayload.contest))
+            }
+          }
+        } catch (syncErr) {
+          console.warn('[Auth] Background session sync warning:', syncErr)
+        }
+
+        navigate('/dashboard')
+      } else {
+        // Real Sign Up Request
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            username: form.username.trim(),
+            email: form.email.trim(),
+            password: form.password
+          })
+        })
+
+        const data = await res.json()
+        if (!res.ok) {
+          setError(data.message || 'Registration failed. Please check inputs.')
+          setIsLoading(false)
+          return
+        }
+
+        // Store access token
+        localStorage.setItem('accessToken', data.token)
+        localStorage.setItem('lb_token', data.token)
+        localStorage.setItem('lb_email', form.email.trim())
+        localStorage.setItem('lb_name', form.username.trim())
+
+        navigate('/dashboard')
+      }
+    } catch (err) {
+      console.error('[Auth] Network error:', err)
+      setError('Server connection error. Please make sure backend is running.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const inputClass =
@@ -86,6 +200,12 @@ function Auth() {
             </button>
           </div>
 
+          {error && (
+            <div className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2.5 text-[12px] font-semibold text-rose-600 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-400">
+              {error}
+            </div>
+          )}
+
           <div className="relative mt-7 min-h-[298px] overflow-hidden">
             <form
               onSubmit={submit}
@@ -129,16 +249,18 @@ function Auth() {
                 </div>
               </label>
               <button
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-[6px] py-3.5 text-[12px] font-extrabold transition hover:-translate-y-0.5 bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-[#c5ef75] dark:text-[#172011] dark:hover:bg-[#d4f88e] dark:shadow-[0_4px_16px_rgba(197,239,117,0.18)]"
+                type="submit"
+                disabled={isLoading}
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-[6px] py-3.5 text-[12px] font-extrabold transition hover:-translate-y-0.5 disabled:opacity-50 disabled:pointer-events-none bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-[#c5ef75] dark:text-[#172011] dark:hover:bg-[#d4f88e] dark:shadow-[0_4px_16px_rgba(197,239,117,0.18)] cursor-pointer"
               >
-                Continue <span className="text-base">↗</span>
+                {isLoading ? 'Verifying credentials...' : 'Continue ↗'}
               </button>
               <p className="mt-5 text-center text-[12px] text-neutral-500 dark:text-[#aab4ab]">
                 New here?{' '}
                 <button
                   type="button"
-                  onClick={() => setIsLogin(false)}
-                  className="font-bold underline underline-offset-4 text-neutral-900 hover:text-black dark:text-[#c5ef75] dark:hover:text-[#d6f890] transition"
+                  onClick={() => { setError(''); setIsLogin(false); }}
+                  className="font-bold underline underline-offset-4 text-neutral-900 hover:text-black dark:text-[#c5ef75] dark:hover:text-[#d6f890] transition cursor-pointer"
                 >
                   Create an account
                 </button>
@@ -191,16 +313,18 @@ function Auth() {
                 />
               </label>
               <button
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-[6px] py-3.5 text-[12px] font-extrabold transition hover:-translate-y-0.5 bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-[#c5ef75] dark:text-[#172011] dark:hover:bg-[#d4f88e] dark:shadow-[0_4px_16px_rgba(197,239,117,0.18)]"
+                type="submit"
+                disabled={isLoading}
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-[6px] py-3.5 text-[12px] font-extrabold transition hover:-translate-y-0.5 disabled:opacity-50 disabled:pointer-events-none bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-[#c5ef75] dark:text-[#172011] dark:hover:bg-[#d4f88e] dark:shadow-[0_4px_16px_rgba(197,239,117,0.18)] cursor-pointer"
               >
-                Create account <span className="text-base">↗</span>
+                {isLoading ? 'Creating account...' : 'Create account ↗'}
               </button>
               <p className="mt-5 text-center text-[12px] text-neutral-500 dark:text-[#aab4ab]">
                 Already have an account?{' '}
                 <button
                   type="button"
-                  onClick={() => setIsLogin(true)}
-                  className="font-bold underline underline-offset-4 text-neutral-900 hover:text-black dark:text-[#c5ef75] dark:hover:text-[#d6f890] transition"
+                  onClick={() => { setError(''); setIsLogin(true); }}
+                  className="font-bold underline underline-offset-4 text-neutral-900 hover:text-black dark:text-[#c5ef75] dark:hover:text-[#d6f890] transition cursor-pointer"
                 >
                   Log in
                 </button>

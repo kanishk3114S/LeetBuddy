@@ -90,7 +90,7 @@ export const generateVerificationToken = async (req, res) => {
                     "leetcode.isVerified": false
                 }
             },
-            { new: true }
+            { returnDocument: "after" }
         );
 
         return res.status(200).json({
@@ -115,7 +115,8 @@ export const verifyLeetCode = async (req, res) => {
 
         // 1. Database Lookup for pending username & token
         const user = await userModel.findById(userId);
-        const { username, verificationToken } = user?.leetcode || {};
+        let username = req.body?.username || user?.leetcode?.username;
+        let verificationToken = req.body?.token || user?.leetcode?.verificationToken;
 
         if (!username || !verificationToken) {
             return res.status(400).json({ error: "No pending verification token found. Please generate one first." });
@@ -147,6 +148,7 @@ export const verifyLeetCode = async (req, res) => {
         // 4. Mark verified & clear token for security
         await userModel.findByIdAndUpdate(userId, {
             $set: {
+                "leetcode.username": username,
                 "leetcode.isVerified": true,
                 "leetcode.verificationToken": null,
                 "leetcode.lastSynced": new Date()
@@ -395,7 +397,7 @@ export const verifyLeetCode = async (req, res) => {
                 submissionCalendar: parsedCalendar,
                 ...(heroCard ? { heroCard } : {})
             },
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: "after" }
         );
 
         // 8. RETURN IN RESPONSE TO FRONTEND
@@ -452,7 +454,7 @@ export const getOrGenerateHeroCard = async (req, res) => {
         }
 
         // Call Gemini AI directly
-        const targetUsername = username || targetData?.username || targetData?.profile?.realName || "Developer";
+        const targetUsername = username || targetData?.profile?.realName || "Developer";
         const heroCard = await generateHeroCard({
             ...targetData,
             username: targetUsername
@@ -714,7 +716,7 @@ export const refreshLeetCodeStats = async (req, res) => {
                 updatedProfile = await profileDataModel.findOneAndUpdate(
                     { userId },
                     { $set: updatePayload },
-                    { upsert: true, new: true }
+                    { upsert: true, returnDocument: "after" }
                 );
 
                 await userModel.findByIdAndUpdate(userId, {
@@ -741,5 +743,38 @@ export const refreshLeetCodeStats = async (req, res) => {
     } catch (error) {
         console.error("Error refreshing LeetCode stats:", error);
         return res.status(500).json({ error: "Failed to refresh stats from LeetCode" });
+    }
+};
+
+/**
+ * Controller to fetch authenticated user's saved profile data from MongoDB.
+ * GET /api/leetcode/profile
+ */
+export const getMyProfile = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            return res.status(401).json({ error: "User authentication required" });
+        }
+
+        const user = await userModel.findById(userId).select("-password");
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        let profileData = null;
+        if (mongoose.connection.readyState === 1) {
+            profileData = await profileDataModel.findOne({ userId });
+        }
+
+        return res.status(200).json({
+            user,
+            username: user.leetcode?.username || null,
+            isVerified: Boolean(user.leetcode?.isVerified),
+            profile: profileData
+        });
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        return res.status(500).json({ error: "Failed to fetch profile data" });
     }
 };

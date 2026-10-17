@@ -298,7 +298,7 @@ export async function syncContestData(username, userId = null) {
 
       const savedContest = await Contest.findOneAndUpdate(updateQuery, updateDoc, {
         upsert: true,
-        new: true,
+        returnDocument: "after",
         setDefaultsOnInsert: true
       });
 

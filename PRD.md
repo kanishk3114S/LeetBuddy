@@ -25,7 +25,7 @@ The product page and architectural flow follows:
 1. **Dashboard & Verification** `[COMPLETED]` — Secure LeetCode handshake, 12-month heatmap, streak metrics, badges, and live sync.
 2. **Profile Analysis** `[COMPLETED]` — AI Hero Card, 11-Tier Progress Mountain, Difficulty Matrix, Radar Matrix, and Temporal Behavioral Analysis.
 3. **Practice Weak Topics** `[UPCOMING]` — Topic-targeted problem ladders based directly on detected weaknesses.
-4. **Contest Analysis** `[UPCOMING]` — Recent and 5-contest performance breakdown, rating shifts, and time-pressure failure analysis.
+4. **Contest Analysis** `[PHASE 1 IMPLEMENTED / PHASE 2 IN PROGRESS]` — Executive telemetry, career distribution & lethality matrices, rating mountain, and 5-contest failure diagnostic engine.
 5. **Weakness AI [RAG-Based System]** `[UPCOMING]` — Retrieval-Augmented Generation system diagnosing root-cause bottlenecks and providing grounded theory & conceptual remediation.
 
 LeetBuddy does not aim to be another competitive programming platform. Its purpose is to answer:
@@ -173,10 +173,10 @@ Directly connects the diagnostic findings from Profile Analysis (the 🔴 Critic
 
 ---
 
-## 4.4 Contest Analysis `[UPCOMING ⏳]`
+## 4.4 Contest Analysis & Time-Pressure Telemetry
 
-Answers:
-> **"What happens to my algorithmic fluency when competing under strict time pressure?"**
+**Core Diagnostic Question:**
+*"What happens to my algorithmic fluency when competing under strict 90-minute time pressure, and where exactly am I bleeding rating points?"*
 
 Focuses on competitive programming contests where speed, penalty minutes, and first-attempt accuracy determine rating.
 
@@ -188,10 +188,20 @@ Focuses on competitive programming contests where speed, penalty minutes, and fi
   - *Wrong Answer (WA)* &rarr; Overlooked edge cases or integer overflow.
   - *Runtime Error (RTE)* &rarr; Out-of-bounds indexing or null pointer exceptions.
 
-### 4.4.2 Last 5 Contests Trend Analysis
-* **Rating Trajectory:** 5-contest rating curve with rolling performance baseline.
-* **Recurring Failure Patterns:** Flags topics repeatedly missed across contests (e.g., *"Failed DP in 3 of your last 5 contests"*).
-* **Contest Weakness vs. Practice Weakness:** Separates general coding weaknesses from contest-specific panic / speed bottlenecks.
+### 4.4.5 AI Contest Copilot: Pressure Bottlenecks & Remediation (Lower Deck — Phase 2)
+Real-time diagnostic engine powered by Google Gemini (`@google/genai`, `gemini-3.5-flash-lite` / `gemini-3.8-flash`) with strict JSON schema output and zero dummy fallbacks:
+- **5-Contest Rolling Velocity & Recurring Failure Patterns:** Detects systemic choke points across the last 5 contests (e.g., *"Stalled on Q3 in 4 of last 5 contests due to TLE"* or *"Averaging 2.4 WA penalties on Q2 greedy/array problems"*).
+- **Contest Panic vs. Practice Weakness Triage:** Cross-references the user's untimed `Topic Mastery` stats against `recentFiveContestsDeepDive` to separate:
+  - **True Algorithmic Knowledge Gaps:** Topics where both untimed practice accuracy is `< 40%` and contest attempts fail.
+  - **Time-Pressure / Execution Panic:** Topics where the user is `Proficient` (`>= 70%` accuracy) in untimed practice but suffers `WA`/`TLE` or fails to convert within the 90-minute contest window.
+- **Tactical Post-Contest Action Plan:** Generates 3 concrete, data-backed directives for the next contest (pacing targets per question slot, penalty-stop rules before submitting unverified edge cases, and specific Q3/Q4 archetype drills).
+
+---
+
+### 4.4.6 Technical Architecture & Data Pipeline Spec
+- **Database Model (`backend/models/contest.model.js`):** Dedicated Mongoose schema indexed by `userId` and `leetcodeUsername`, storing `summary`, full chronological `contestHistory`, `recentFiveContestsDeepDive` (with embedded `questions` and `errorCause` telemetry), and cached `aiContestAnalysis`.
+- **Parallel GraphQL Extraction (`backend/services/leetcodeContest.service.js`):** Executes `userContestRanking`, `userContestRankingHistory` (filtered strictly for `attended === true`), and timestamp-correlated `recentSubmissionList` queries concurrently alongside profile verification/sync via `Promise.allSettled`.
+- **Frontend State & Normalization (`frontend/src/utils/contestUtils.js`):** Pure transformation layer computing rank matrices, solve lethality ratios, mountain chart series, and 5-contest penalty aggregations, synchronized across views via the `lb_contest_updated` browser event.
 
 ---
 
@@ -292,8 +302,8 @@ LeetBuddy strictly adheres to:
 ```text
 PHASE 1: Foundation & Verified Dashboard       [COMPLETED ✅]
 PHASE 2: Profile Analysis & AI Hero Card       [COMPLETED ✅]
-PHASE 3: Practice Weak Topics                  [IN QUEUE ⏳ - CURRENT]
-PHASE 4: Contest Analysis                      [IN QUEUE ⏳]
+PHASE 3: Practice Weak Topics                  [IN QUEUE ⏳]
+PHASE 4: Contest Analysis                      [UPPER DECK COMPLETE ✅ / LOWER DECK IN PROGRESS 🚀]
 PHASE 5: Weakness AI [RAG-Based System]        [IN QUEUE ⏳]
 PHASE 6: Similar Problems & Recommendation     [PLANNED]
 PHASE 7: Polish, Integration & Deployment      [PLANNED]
@@ -313,17 +323,22 @@ PHASE 7: Polish, Integration & Deployment      [PLANNED]
 * **Topic Mastery Radar Matrix:** 8-cluster RadarChart with 🟢 Dominant, 🟡 Developing, 🔴 Critical Weakness categorization tags.
 * **Behavioral & Consistency Analysis:** Weekday velocity vs failure bar chart, 52-week heatmap, consistency index.
 
-### Phase 3: Practice Weak Topics `[NEXT IN FLOW ⏳]`
+### Phase 3: Practice Weak Topics `[IN QUEUE ⏳]`
 * **Weakness-to-Practice Pipeline:** Automatically routes detected weak topics from Profile Analysis into practice queues.
 * **4-Stage Practice Ladders:** Warm-up &rarr; Concept Reinforcement &rarr; Medium Application &rarr; Advanced Challenge.
 * **Problem Cards & Metadata:** Difficulty, estimated solve time, relevant concept tag, direct problem link.
 * **Practice Queue Progress Tracker:** Real-time completion tracker updating Topic Mastery scores.
 
-### Phase 4: Contest Analysis `[UPCOMING ⏳]`
-* Ingestion of recent contest metrics (rank, rating delta, problems solved/failed, penalty attempts).
-* 5-Contest historical trend analysis with rolling performance baseline.
-* Contest failure pattern classification (TLE vs WA vs RTE, speed vs concept vs implementation).
-* Contest-specific weakness identification.
+### Phase 4: Contest Analysis `[UPPER DECK COMPLETE ✅ / LOWER DECK IN PROGRESS 🚀]`
+* **Upper Deck (Completed):**
+  - High-density Executive Contest Telemetry Ribbon (Rating, Peak, Low, Contests, Rank, Top %, Badge).
+  - Career Distribution Matrix (Elite, Contender, Competitor, Participant) & Solve Lethality Matrix (All Kills 4/4 to 1/4).
+  - Interactive Rating Mountain Trajectory Chart with Recharts area curves, gradient fills, and custom tooltips.
+* **Lower Deck (Phase 2 - Current Focus):**
+  - Last 5 Contests Deep Dive card & row telemetry (Rank, Finish Time, Penalty additions).
+  - Q1–Q4 Problem-by-Problem timeline with status (`Accepted`, `Failed Attempt`, `Not Attempted`), fail count, and submission metadata.
+  - Failure Root-Cause Classification Engine (`TLE`, `WA`, `RTE`, `MLE`/`CE`).
+  - AI Contest Copilot powered by Google Gemini (5-contest velocity, pressure vs practice triage, tactical action plan).
 
 ### Phase 5: Weakness AI [RAG-Based System] `[UPCOMING ⏳]`
 * **RAG Knowledge Base:** Curation of structured DSA concepts, state transition formulas, and algorithmic invariant templates.

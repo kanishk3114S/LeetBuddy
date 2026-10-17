@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard.jsx'
 import ProfileAnalysis from './pages/ProfileAnalysis.jsx'
 import TopicMastery from './pages/TopicMastery.jsx'
 import ContestAnalysis from './pages/ContestAnalysis.jsx'
+import ContestDeepDive from './pages/ContestDeepDive.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 
 //ReactJS gets a DOM container [by the name of root] and renders the every JSX components which are written in Java Script style to render the HTML like components//
@@ -31,6 +32,8 @@ const ourRouter = createBrowserRouter(
       <Route path ='/contest-analysis' element = {<ContestAnalysis/>}/>
       <Route path ='/contests' element = {<ContestAnalysis/>}/>
       <Route path ='/contest' element = {<ContestAnalysis/>}/>
+      <Route path ='/contest-analysis/deep-dive' element = {<ContestDeepDive/>}/>
+      <Route path ='/contest-deep-dive' element = {<ContestDeepDive/>}/>
     </Route>
   )
 )

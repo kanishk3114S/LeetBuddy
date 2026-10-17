@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { Microscope } from 'lucide-react'
 import ThemeToggle from './ThemeToggle.jsx'
 
 export default function Sidebar({ active, setActive }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [isHovered, setIsHovered] = useState(false)
+  const [isContestHovered, setIsContestHovered] = useState(false)
   const [isPinned, setIsPinned] = useState(() => {
     try {
       return localStorage.getItem('lb_sidebar_pinned') === 'true'
@@ -41,6 +43,8 @@ export default function Sidebar({ active, setActive }) {
       ? 'profile-analysis'
       : location.pathname.startsWith('/topic-mastery')
       ? 'topic-mastery'
+      : (location.pathname.includes('deep-dive') || location.pathname === '/contest-deep-dive')
+      ? 'contest-deep-dive'
       : location.pathname.startsWith('/contest')
       ? 'contests'
       : 'dashboard'
@@ -113,67 +117,107 @@ export default function Sidebar({ active, setActive }) {
         </div>
 
         {NAV_ITEMS.map((item) => {
-          const isActive = currentActive === item.id
+          const isExactActive = currentActive === item.id
+          const isSubActive = item.id === 'contests' && currentActive === 'contest-deep-dive'
+          const isActive = isExactActive
+
           return (
-            <button
+            <div
               key={item.id}
-              type="button"
-              disabled={item.disabled}
-              onClick={() => handleNavClick(item)}
-              className={`
-                group relative flex w-full items-center rounded-[9px] py-2.5 transition-all duration-200
-                ${isExpanded ? 'px-3 justify-start' : 'px-0 justify-center'}
-                ${item.disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
-                ${isActive
-                  ? 'bg-neutral-900 text-white shadow-sm dark:bg-neutral-100 dark:text-neutral-900 font-bold'
-                  : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800'
-                }
-              `}
+              className="w-full"
+              onMouseEnter={item.id === 'contests' ? () => setIsContestHovered(true) : undefined}
+              onMouseLeave={item.id === 'contests' ? () => setIsContestHovered(false) : undefined}
             >
-              {/* Active left indicator bar for collapsed mode */}
-              {isActive && !isExpanded && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-neutral-900 dark:bg-neutral-100" />
-              )}
-
-              {/* Icon */}
-              <span className="text-[17px] shrink-0 w-6 flex items-center justify-center">
-                {item.icon}
-              </span>
-
-              {/* Label & Badges (Visible on expansion) */}
-              <div
+              <button
+                type="button"
+                disabled={item.disabled}
+                onClick={() => handleNavClick(item)}
                 className={`
-                  flex items-center justify-between flex-1 ml-2.5 overflow-hidden transition-all duration-200
-                  ${isExpanded ? 'opacity-100 max-w-[150px]' : 'opacity-0 max-w-0 pointer-events-none'}
+                  group relative flex w-full items-center rounded-[9px] py-2.5 transition-all duration-200
+                  ${isExpanded ? 'px-3 justify-start' : 'px-0 justify-center'}
+                  ${item.disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
+                  ${isActive
+                    ? 'bg-neutral-900 text-white shadow-sm dark:bg-neutral-100 dark:text-neutral-900 font-bold'
+                    : isSubActive
+                    ? 'bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 font-semibold'
+                    : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800'
+                  }
                 `}
               >
-                <span className="text-[13px] whitespace-nowrap truncate">
-                  {item.label}
+                {/* Active left indicator bar for collapsed mode */}
+                {isActive && !isExpanded && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-neutral-900 dark:bg-neutral-100" />
+                )}
+                {isSubActive && !isExpanded && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-neutral-400 dark:bg-neutral-500" />
+                )}
+
+                {/* Icon */}
+                <span className="text-[17px] shrink-0 w-6 flex items-center justify-center">
+                  {item.icon}
                 </span>
 
-                {item.badge && (
-                  <span
+                {/* Label & Badges (Visible on expansion) */}
+                <div
+                  className={`
+                    flex items-center justify-between flex-1 ml-2.5 overflow-hidden transition-all duration-200
+                    ${isExpanded ? 'opacity-100 max-w-[150px]' : 'opacity-0 max-w-0 pointer-events-none'}
+                  `}
+                >
+                  <span className="text-[13px] whitespace-nowrap truncate">
+                    {item.label}
+                  </span>
+
+                  {item.badge && (
+                    <span
+                      className={`
+                        ml-2 rounded px-1.5 py-0.5 font-mono text-[9px] font-extrabold uppercase shrink-0
+                        ${isActive
+                          ? 'bg-white/20 text-white dark:bg-black/10 dark:text-neutral-900'
+                          : 'bg-neutral-200 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
+                        }
+                      `}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
+
+                {/* Floating Tooltip (Shown ONLY when collapsed on individual hover) */}
+                {!isExpanded && (
+                  <div className="absolute left-[72px] top-1/2 -translate-y-1/2 z-50 hidden rounded-md bg-neutral-900 px-2.5 py-1 text-xs font-semibold text-white shadow-lg group-hover:block dark:bg-neutral-100 dark:text-neutral-900 whitespace-nowrap pointer-events-none">
+                    {item.label}
+                    {isSubActive && <span className="ml-1.5 text-[10px] text-emerald-400 font-mono">• Deep Dive</span>}
+                    {item.badge && <span className="ml-1.5 text-[10px] opacity-75">({item.badge})</span>}
+                  </div>
+                )}
+              </button>
+
+              {/* Nested Level-2 Sub-Navigation for Contest Analysis (Visible when active or on hover) */}
+              {item.id === 'contests' && isExpanded && (isContestHovered || currentActive === 'contest-deep-dive') && (
+                <div className="ml-5 pl-3 border-l border-slate-200 dark:border-slate-800 space-y-1 mt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (setActive) setActive('contest-deep-dive')
+                      if (location.pathname !== '/contest-analysis/deep-dive') {
+                        navigate('/contest-analysis/deep-dive')
+                      }
+                    }}
                     className={`
-                      ml-2 rounded px-1.5 py-0.5 font-mono text-[9px] font-extrabold uppercase shrink-0
-                      ${isActive
-                        ? 'bg-white/20 text-white dark:bg-black/10 dark:text-neutral-900'
-                        : 'bg-neutral-200 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
+                      group flex w-full items-center gap-2 rounded-md py-1.5 px-2.5 text-[12px] font-medium transition-colors cursor-pointer
+                      ${currentActive === 'contest-deep-dive'
+                        ? 'bg-neutral-900 text-white shadow-xs dark:bg-neutral-100 dark:text-neutral-900 font-semibold'
+                        : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100'
                       }
                     `}
                   >
-                    {item.badge}
-                  </span>
-                )}
-              </div>
-
-              {/* Floating Tooltip (Shown ONLY when collapsed on individual hover) */}
-              {!isExpanded && (
-                <div className="absolute left-[72px] top-1/2 -translate-y-1/2 z-50 hidden rounded-md bg-neutral-900 px-2.5 py-1 text-xs font-semibold text-white shadow-lg group-hover:block dark:bg-neutral-100 dark:text-neutral-900 whitespace-nowrap pointer-events-none">
-                  {item.label}
-                  {item.badge && <span className="ml-1.5 text-[10px] opacity-75">({item.badge})</span>}
+                    <Microscope className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate text-[12px] leading-tight">Deep Dive</span>
+                  </button>
                 </div>
               )}
-            </button>
+            </div>
           )
         })}
       </nav>

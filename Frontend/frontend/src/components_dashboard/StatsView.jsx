@@ -13,60 +13,8 @@ import {
 } from 'lucide-react'
 import { calculateRank } from '../utils/rankings.js'
 import { analyzeTopics } from '../utils/topicData.js'
-import { normalizeProfileData, formatGraphQLResponse } from '../utils/profileData.js'
+import { normalizeProfileData } from '../utils/profileData.js'
 import BadgeImage from '../components_profileAnalyses/BadgeImage.jsx'
-
-const DIRECT_STATS_QUERY = `
-query getUserFullStats($username: String!) {
-  allQuestionsCount {
-    difficulty
-    count
-  }
-  matchedUser(username: $username) {
-    profile {
-      ranking
-      userAvatar
-      realName
-      aboutMe
-    }
-    problemsSolvedBeatsStats {
-      difficulty
-      percentage
-    }
-    submitStatsGlobal {
-      acSubmissionNum { difficulty count submissions }
-      totalSubmissionNum { difficulty count submissions }
-    }
-    userCalendar {
-      activeYears
-      streak
-      totalActiveDays
-      submissionCalendar
-    }
-    activeBadge {
-      id
-      name
-      displayName
-      icon
-    }
-    badges {
-      id
-      name
-      shortName
-      displayName
-      icon
-      hoverText
-      creationDate
-      category
-    }
-    tagProblemCounts {
-      fundamental { tagName problemsSolved }
-      intermediate { tagName problemsSolved }
-      advanced { tagName problemsSolved }
-    }
-  }
-}
-`
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -304,28 +252,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
           return
         }
       } catch (backendErr) {
-        console.warn('Backend refresh failed, trying proxy fallback:', backendErr)
-      }
-
-      // 2. Fallback: Query /leetcode-proxy directly with full data formatting
-      if (!refreshedData) {
-        const proxyRes = await fetch('/leetcode-proxy', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: DIRECT_STATS_QUERY,
-            variables: { username }
-          })
-        })
-
-        if (proxyRes.ok) {
-          const gqlData = await proxyRes.json()
-          const matchedUser = gqlData?.data?.matchedUser
-          if (matchedUser) {
-            const formatted = formatGraphQLResponse(matchedUser, gqlData?.data?.allQuestionsCount || [])
-            refreshedData = { username, profile: formatted }
-          }
-        }
+        console.warn('Backend refresh failed:', backendErr)
       }
 
       if (refreshedData) {
