@@ -78,6 +78,10 @@ const recentContestDeepDiveSchema = new mongoose.Schema({
     type: Number,
     default: 4
   },
+  finishTimeInSeconds: {
+    type: Number,
+    default: 0
+  },
   questions: [questionDeepDiveSchema]
 }, { _id: false });
 
@@ -172,6 +176,36 @@ const contestSchema = new mongoose.Schema({
   },
   contestHistory: [contestHistorySchema],
   recentFiveContestsDeepDive: [recentContestDeepDiveSchema],
+  aiDeepDiveRemediation: {
+    generatedAt: { type: Date, default: null },
+    model: { type: String, default: null },
+    weakTopicDiagnoses: [
+      {
+        topic: { type: String },
+        whyUnderPressure: { type: String },
+        symptoms: [{ type: String }],
+        recommendedProblems: [
+          {
+            title: { type: String },
+            titleSlug: { type: String },
+            difficulty: { type: String },
+            targetSolveTime: { type: String },
+            focusNote: { type: String }
+          }
+        ]
+      }
+    ],
+    questionBlueprints: [
+      {
+        title: { type: String },
+        titleSlug: { type: String },
+        contestTitle: { type: String },
+        whyYouBled: { type: String },
+        coreTrick: { type: String },
+        targetComplexity: { type: String }
+      }
+    ]
+  },
   lastSyncedAt: {
     type: Date,
     default: Date.now

@@ -149,7 +149,7 @@ export default function DifficultyPointsMatrix({ stats }) {
         </div>
 
         {/* Global Efficiency Score Pill */}
-        <div className="flex items-center gap-2 self-start sm:self-auto rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-850 px-3 py-1.5">
+        <div className="flex items-center gap-2 self-start sm:self-auto rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 px-3 py-1.5">
           <Target className="h-3.5 w-3.5 text-emerald-500" />
           <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
             Efficiency:

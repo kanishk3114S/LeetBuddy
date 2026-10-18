@@ -137,7 +137,7 @@ export default function HeroCard({ stats, rank }) {
           border border-neutral-300 bg-white/90 text-neutral-800 shadow-xs
           hover:border-neutral-400 hover:bg-neutral-50 hover:shadow-sm
           dark:border-neutral-800 dark:bg-neutral-900/90 dark:text-neutral-200
-          dark:hover:border-neutral-700 dark:hover:bg-neutral-850
+          dark:hover:border-neutral-700 dark:hover:bg-neutral-800
           active:scale-[0.98]
         "
       >
@@ -345,7 +345,7 @@ export default function HeroCard({ stats, rank }) {
             )}
 
             {/* ── Symmetrical Footer ── */}
-            <div className="relative z-10 pt-2 border-t border-neutral-200 dark:border-neutral-850 flex items-center justify-between text-[10px] font-mono text-neutral-500 dark:text-neutral-500">
+            <div className="relative z-10 pt-2 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between text-[10px] font-mono text-neutral-500 dark:text-neutral-500">
               <div className="flex items-center gap-1.5">
                 <Cpu className="h-3 w-3 text-neutral-400 dark:text-neutral-500 shrink-0" />
                 <span>Google Gemini Engine</span>

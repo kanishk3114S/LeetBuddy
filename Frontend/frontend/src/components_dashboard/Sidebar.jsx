@@ -87,7 +87,7 @@ export default function Sidebar({ active, setActive }) {
               ${isExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 pointer-events-none'}
             `}
           >
-            <span className="text-[15px] font-extrabold tracking-[-0.5px] text-neutral-900 dark:text-neutral-100 whitespace-nowrap">
+            <span className="font-heading text-[15px] font-extrabold tracking-[-0.5px] text-neutral-900 dark:text-neutral-100 whitespace-nowrap">
               LeetBuddy
             </span>
             <button
@@ -205,16 +205,17 @@ export default function Sidebar({ active, setActive }) {
                       }
                     }}
                     className={`
-                      group flex w-full items-center gap-2 rounded-md py-1.5 px-2.5 text-[12px] font-medium transition-colors cursor-pointer
+                      group flex w-full items-center gap-2.5 rounded-lg py-2 px-3 text-[13px] font-semibold transition-all cursor-pointer
                       ${currentActive === 'contest-deep-dive'
-                        ? 'bg-neutral-900 text-white shadow-xs dark:bg-neutral-100 dark:text-neutral-900 font-semibold'
-                        : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100'
+                        ? 'bg-neutral-900 text-white shadow-xs dark:bg-neutral-100 dark:text-neutral-900 font-bold'
+                        : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-neutral-100'
                       }
                     `}
                   >
-                    <Microscope className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate text-[12px] leading-tight">Deep Dive</span>
+                    <Microscope className="w-4 h-4 shrink-0" />
+                    <span className="truncate text-[13px] tracking-tight leading-none">Deep Dive</span>
                   </button>
+
                 </div>
               )}
             </div>

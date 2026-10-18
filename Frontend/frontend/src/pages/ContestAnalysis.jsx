@@ -300,7 +300,7 @@ export default function ContestAnalysis() {
   // Unverified profile empty state
   if (!stats && !contestDoc) {
     return (
-      <div className="flex h-screen overflow-hidden bg-neutral-50 font-[Manrope,Arial,sans-serif] dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors duration-300">
+      <div className="flex h-screen overflow-hidden bg-neutral-50 font-sans dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors duration-300">
         <Sidebar active={activeNav} setActive={setActiveNav} />
         <div className="flex flex-1 flex-col overflow-hidden">
           <DashHeader user={user} stats={stats} />
@@ -332,7 +332,7 @@ export default function ContestAnalysis() {
   // Verified user but 0 attended contests state
   if (overview.attendedCount === 0) {
     return (
-      <div className="flex h-screen overflow-hidden bg-neutral-50 font-[Manrope,Arial,sans-serif] dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors duration-300">
+      <div className="flex h-screen overflow-hidden bg-neutral-50 font-sans dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors duration-300">
         <Sidebar active={activeNav} setActive={setActiveNav} />
         <div className="flex flex-1 flex-col overflow-hidden">
           <DashHeader user={user} stats={stats} />
@@ -385,7 +385,7 @@ export default function ContestAnalysis() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-neutral-50 font-[Manrope,Arial,sans-serif] dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors duration-300">
+    <div className="flex h-screen overflow-hidden bg-neutral-50 font-sans dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors duration-300">
       {/* Navigation Sidebar */}
       <Sidebar active={activeNav} setActive={setActiveNav} />
 
@@ -423,6 +423,14 @@ export default function ContestAnalysis() {
                 )}
                 <button
                   type="button"
+                  onClick={() => navigate('/contest-analysis/deep-dive')}
+                  className="flex items-center gap-1.5 rounded-lg border border-neutral-900 bg-neutral-900 px-3.5 py-1.5 font-mono text-[11.5px] font-bold text-white shadow-xs transition hover:bg-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
+                >
+                  <Activity className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>Deep Dive Autopsy ↗</span>
+                </button>
+                <button
+                  type="button"
                   disabled={isSyncing}
                   onClick={() => loadContestData(true)}
                   className="flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 font-mono text-[11px] font-bold text-neutral-700 shadow-2xs transition hover:bg-white hover:border-neutral-300 disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
@@ -432,6 +440,7 @@ export default function ContestAnalysis() {
                 </button>
               </div>
             </div>
+
 
             {/* KPI Telemetry 5-Column Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">

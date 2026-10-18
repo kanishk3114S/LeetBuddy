@@ -1,5 +1,6 @@
 import userModel from "../models/user.model.js";
 import { getContestData, syncContestData } from "../services/leetcodeContest.service.js";
+import { generateContestRemediation } from "../services/aiContestRemediation.service.js";
 
 /**
  * Controller to fetch contest telemetry by LeetCode username.
@@ -89,5 +90,29 @@ export async function syncContest(req, res) {
   } catch (error) {
     console.error("[ContestController] Error syncing contest telemetry:", error);
     return res.status(500).json({ error: error.message || "Failed to sync contest telemetry" });
+  }
+}
+
+/**
+ * Controller to fetch AI contest remediation blueprint.
+ * GET/POST /api/v1/contests/:username/remediation
+ */
+export async function getContestRemediationController(req, res) {
+  try {
+    const { username } = req.params;
+    if (!username) {
+      return res.status(400).json({ error: "Username parameter is required" });
+    }
+
+    const forceRefresh = req.query.refresh === "true" || req.body?.refresh === true;
+    const remediation = await generateContestRemediation(username, { forceRefresh });
+
+    return res.status(200).json({
+      message: "AI contest remediation retrieved successfully",
+      remediation
+    });
+  } catch (error) {
+    console.error("[ContestController] Error fetching AI remediation:", error);
+    return res.status(500).json({ error: error.message || "Failed to generate contest remediation" });
   }
 }

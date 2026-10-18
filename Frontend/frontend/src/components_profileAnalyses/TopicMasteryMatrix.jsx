@@ -249,7 +249,7 @@ export default function TopicMasteryMatrix({ stats }) {
                   flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-mono transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95
                   ${selectedTopic === t.topic
                     ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-bold shadow-xs'
-                    : 'bg-white text-neutral-700 border border-neutral-200 hover:border-neutral-400 shadow-xs dark:bg-neutral-850 dark:text-neutral-400 dark:border-neutral-800'
+                    : 'bg-white text-neutral-700 border border-neutral-200 hover:border-neutral-400 shadow-xs dark:bg-neutral-900 dark:text-neutral-400 dark:border-neutral-800'
                   }
                 `}
               >

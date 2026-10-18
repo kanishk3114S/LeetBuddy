@@ -41,6 +41,18 @@ async function executeLeetCodeGraphQL(query, variables = {}) {
   return response.json();
 }
 
+function getStatusFromStatusCode(status) {
+  switch (Number(status)) {
+    case 10: return "Accepted";
+    case 11: return "Wrong Answer";
+    case 14: return "Time Limit Exceeded";
+    case 15: return "Runtime Error";
+    case 16: return "Memory Limit Exceeded";
+    case 20: return "Compile Error";
+    default: return "Wrong Answer";
+  }
+}
+
 /**
  * Core GraphQL queries
  */
@@ -67,7 +79,29 @@ query getContestData($username: String!) {
     contest {
       title
       startTime
+      titleSlug
     }
+  }
+}
+`;
+
+const CONTEST_QUESTIONS_QUERY = `
+query contestQuestionList($contestSlug: String!) {
+  contestQuestionList(contestSlug: $contestSlug) {
+    title
+    titleSlug
+    questionId
+  }
+}
+`;
+
+const CONTEST_REPLAY_EVENTS_QUERY = `
+query userContestReplayEvents($username: String!, $contestSlug: String!, $questionSlug: String!) {
+  userContestReplayEvents(username: $username, contestSlug: $contestSlug, questionSlug: $questionSlug) {
+    id
+    eventType
+    eventData
+    timestamp
   }
 }
 `;
@@ -171,78 +205,188 @@ export async function fetchLeetCodeContestData(username) {
 
   for (const entry of recentFiveAttended) {
     const contestTitle = entry.contest?.title || "Contest";
+    const contestSlug = entry.contest?.titleSlug || contestTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     const startTime = Number(entry.contest?.startTime) || 0;
     const ranking = Number(entry.ranking) || 0;
     const ratingAfter = Math.round(Number(entry.rating) || 1500);
     const problemsSolved = Number(entry.problemsSolved) || 0;
     const totalProblems = Number(entry.totalProblems) || 4;
+    const finishTimeInSeconds = Number(entry.finishTimeInSeconds) || 0;
 
     // Delta relative to prior attended contest in full history
     const entryIndex = attendedEntries.indexOf(entry);
     const prevRating = entryIndex > 0 ? attendedEntries[entryIndex - 1].rating : 1500;
     const ratingDelta = Math.round(ratingAfter - prevRating);
 
-    // Contest time window is standard 90 minutes (5400 seconds)
-    const windowStart = startTime;
-    const windowEnd = startTime + 5400;
-
-    // Correlate recent submissions with this contest window
-    const windowSubs = recentSubmissions.filter((s) => {
-      const ts = Number(s?.timestamp) || 0;
-      return ts >= windowStart && ts <= windowEnd;
-    });
-
-    // Group correlated submissions by question titleSlug
-    const problemMap = new Map();
-    for (const sub of windowSubs) {
-      const key = sub.titleSlug || sub.title || "question";
-      if (!problemMap.has(key)) {
-        problemMap.set(key, []);
-      }
-      problemMap.get(key).push(sub);
+    // Fetch official contest question metadata
+    let contestQuestions = [];
+    try {
+      const qRes = await executeLeetCodeGraphQL(CONTEST_QUESTIONS_QUERY, { contestSlug });
+      contestQuestions = qRes.data?.contestQuestionList || [];
+    } catch (e) {
+      console.warn(`[ContestSync] Could not fetch question list for ${contestSlug}:`, e.message);
     }
 
     const questions = [];
 
-    // First: populate from matched real submissions
-    for (const [slug, subs] of problemMap.entries()) {
-      subs.sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
-      const hasAccepted = subs.some((s) => s.statusDisplay === "Accepted");
-      const failSubs = subs.filter((s) => s.statusDisplay !== "Accepted");
-      const latestSub = subs[subs.length - 1];
-
-      const status = hasAccepted ? "Accepted" : normalizeStatusDisplay(latestSub.statusDisplay);
-      const errorCause = hasAccepted ? null : (latestSub.statusDisplay || "Error");
-
-      questions.push({
-        title: latestSub.title || slug,
-        titleSlug: slug,
-        difficulty: DEFAULT_DIFFICULTIES[questions.length] || "Medium",
-        status,
-        failCount: failSubs.length,
-        language: latestSub.lang || null,
-        submissionCode: null,
-        errorCause,
-        submittedAt: Number(latestSub.timestamp) || null
-      });
-    }
-
-    // Second: if older contest or submissions exceeded 100-limit, pad cleanly to totalProblems (4)
-    while (questions.length < totalProblems) {
-      const qIdx = questions.length;
-      const isSolved = qIdx < problemsSolved;
-      questions.push({
+    for (let qIdx = 0; qIdx < totalProblems; qIdx++) {
+      const qMeta = contestQuestions[qIdx] || {
         title: `${contestTitle} - Q${qIdx + 1}`,
-        titleSlug: `${contestTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-q${qIdx + 1}`,
-        difficulty: DEFAULT_DIFFICULTIES[qIdx] || "Medium",
-        status: isSolved ? "Accepted" : "Not Attempted",
-        failCount: 0,
-        language: null,
-        submissionCode: null,
-        errorCause: null,
-        submittedAt: null
-      });
+        titleSlug: `${contestSlug}-q${qIdx + 1}`
+      };
+
+      let events = [];
+      try {
+        const evRes = await executeLeetCodeGraphQL(CONTEST_REPLAY_EVENTS_QUERY, {
+          username: cleanUsername,
+          contestSlug,
+          questionSlug: qMeta.titleSlug
+        });
+        events = evRes.data?.userContestReplayEvents || [];
+      } catch (e) {
+        // Fallback gracefully
+      }
+
+      const submits = events.filter((e) => e.eventType === "5");
+      const runs = events.filter((e) => e.eventType === "4");
+
+      let lang = null;
+      for (const e of events) {
+        if (e.eventData && e.eventData.includes('"lang":')) {
+          try {
+            const parsed = JSON.parse(e.eventData);
+            if (parsed.lang) {
+              lang = parsed.lang;
+              break;
+            }
+          } catch {}
+        }
+      }
+
+      // Check for Accepted submission
+      let acSubmit = null;
+      for (const s of submits) {
+        try {
+          const d = JSON.parse(s.eventData || "{}");
+          if (d?.result?.status === 10) {
+            acSubmit = s;
+            break;
+          }
+        } catch {}
+      }
+
+      if (acSubmit) {
+        // Calculate fails before this Accepted submission
+        const failsBeforeAc = [];
+        for (const s of submits) {
+          if (new Date(s.timestamp) < new Date(acSubmit.timestamp)) {
+            try {
+              const d = JSON.parse(s.eventData || "{}");
+              if (d?.result?.status !== 10) {
+                failsBeforeAc.push(d?.result?.status);
+              }
+            } catch {}
+          }
+        }
+
+        const failCount = failsBeforeAc.length;
+        const lastFailStatus = failCount > 0 ? failsBeforeAc[failsBeforeAc.length - 1] : null;
+
+        questions.push({
+          title: qMeta.title,
+          titleSlug: qMeta.titleSlug,
+          difficulty: DEFAULT_DIFFICULTIES[qIdx] || "Medium",
+          status: "Accepted",
+          failCount,
+          language: lang || "cpp",
+          submissionCode: null,
+          errorCause: lastFailStatus ? getStatusFromStatusCode(lastFailStatus) : null,
+          submittedAt: Math.round(new Date(acSubmit.timestamp).getTime() / 1000)
+        });
+      } else if (submits.length > 0) {
+        // Unaccepted submissions -> Hard Reject / Brick Wall
+        const lastSubmit = submits[submits.length - 1];
+        let lastStatus = 11;
+        try {
+          const d = JSON.parse(lastSubmit.eventData || "{}");
+          lastStatus = d?.result?.status || 11;
+        } catch {}
+
+        const statusStr = getStatusFromStatusCode(lastStatus);
+
+        questions.push({
+          title: qMeta.title,
+          titleSlug: qMeta.titleSlug,
+          difficulty: DEFAULT_DIFFICULTIES[qIdx] || "Medium",
+          status: statusStr,
+          failCount: submits.length,
+          language: lang || "cpp",
+          submissionCode: null,
+          errorCause: statusStr,
+          submittedAt: Math.round(new Date(lastSubmit.timestamp).getTime() / 1000)
+        });
+      } else {
+        // Fallback: If LeetCode official record says it was solved, but replay events were empty (e.g. legacy/alternate UI)
+        const isSolvedByOfficial = qIdx < problemsSolved;
+        if (isSolvedByOfficial) {
+          questions.push({
+            title: qMeta.title,
+            titleSlug: qMeta.titleSlug,
+            difficulty: DEFAULT_DIFFICULTIES[qIdx] || "Medium",
+            status: "Accepted",
+            failCount: 0,
+            language: lang || "cpp",
+            submissionCode: null,
+            errorCause: null,
+            submittedAt: null
+          });
+        } else {
+          // Untouched / Starved / Clock runout - user did not submit
+          questions.push({
+            title: qMeta.title,
+            titleSlug: qMeta.titleSlug,
+            difficulty: DEFAULT_DIFFICULTIES[qIdx] || "Medium",
+            status: "Not Attempted",
+            failCount: 0,
+            language: null,
+            submissionCode: null,
+            errorCause: null,
+            submittedAt: null
+          });
+        }
+      }
     }
+
+    // Mathematical reconciliation with finishTimeInSeconds:
+    let knownAcceptedFails = questions.reduce(
+      (acc, q) => acc + (q.status === "Accepted" ? q.failCount : 0),
+      0
+    );
+
+    // If finishTimeInSeconds > 5400 (standard 90 min contest duration), true penalty minutes exist
+    if (finishTimeInSeconds > 5400) {
+      const minPenaltyNeeded = Math.ceil((finishTimeInSeconds - 5400) / 300);
+      if (knownAcceptedFails < minPenaltyNeeded) {
+        const missingFails = minPenaltyNeeded - knownAcceptedFails;
+        // Allocate missing fails to the latest solved question that has 0 fails recorded
+        const candidateQ = [...questions].reverse().find((q) => q.status === "Accepted");
+        if (candidateQ) {
+          candidateQ.failCount += missingFails;
+          candidateQ.errorCause = candidateQ.errorCause || "Wrong Answer";
+          knownAcceptedFails += missingFails;
+        }
+      }
+    }
+
+    // Synthesize timestamps for any Accepted question lacking submittedAt
+    const rawCodingTime = Math.max(0, finishTimeInSeconds - (knownAcceptedFails * 300));
+    questions.forEach((q, idx) => {
+      if (q.status === "Accepted" && !q.submittedAt) {
+        const solvedCount = questions.filter((x) => x.status === "Accepted").length;
+        const fraction = (idx + 1) / Math.max(1, solvedCount);
+        q.submittedAt = startTime + Math.round(rawCodingTime * fraction);
+      }
+    });
 
     recentFiveContestsDeepDive.push({
       contestTitle,
@@ -252,6 +396,7 @@ export async function fetchLeetCodeContestData(username) {
       ratingDelta,
       problemsSolved,
       totalProblems,
+      finishTimeInSeconds,
       questions
     });
   }
@@ -352,10 +497,16 @@ export async function getContestData(username, userId = null) {
     });
 
     if (existing) {
-      return existing;
+      // Check if existing document has real telemetry (failCount, errors, or timestamps)
+      const hasRealDeepDive = existing.recentFiveContestsDeepDive?.some(
+        (c) => c.questions?.some((q) => q.failCount > 0 || (q.status !== "Accepted" && q.status !== "Not Attempted") || q.submittedAt)
+      );
+      if (hasRealDeepDive) {
+        return existing;
+      }
     }
   }
 
-  // Not yet cached: sync directly
+  // Not yet cached or outdated blank deep dive telemetry: sync directly
   return syncContestData(cleanUsername, userId);
 }

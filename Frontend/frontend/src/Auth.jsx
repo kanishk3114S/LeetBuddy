@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import ThemeToggle from './components_dashboard/ThemeToggle.jsx'
 
 const Brand = () => (
-  <div className="flex items-center gap-2.5 text-[16px] font-extrabold tracking-[-.6px] text-neutral-900 dark:text-[#edf2ed]">
+  <div className="font-heading flex items-center gap-2.5 text-[16px] font-extrabold tracking-[-.6px] text-neutral-900 dark:text-[#edf2ed]">
     <span className="flex h-[25px] w-[25px] items-end justify-center gap-[2px] rounded-[7px] border-2 p-1 border-neutral-900 dark:border-[#edf2ed]">
       <i className="h-[6px] w-[3px] rounded-sm bg-neutral-900 dark:bg-[#edf2ed]" />
       <i className="h-[11px] w-[3px] rounded-sm bg-neutral-900 dark:bg-[#edf2ed]" />
@@ -150,7 +150,7 @@ function Auth() {
     "dark:focus:border-[#a8de4e] dark:focus:ring-2 dark:focus:ring-[#a8de4e]/20"
 
   return (
-    <main className="auth-enter min-h-screen font-[Manrope,Arial,sans-serif] transition-colors duration-300 bg-neutral-50 dark:bg-[#131815] text-neutral-900 dark:text-[#edf2ed]">
+    <main className="auth-enter min-h-screen font-sans transition-colors duration-300 bg-neutral-50 dark:bg-[#131815] text-neutral-900 dark:text-[#edf2ed]">
       <header className="mx-auto flex h-[86px] w-[min(1160px,calc(100%-40px))] items-center justify-between">
         <Brand />
         <ThemeToggle />

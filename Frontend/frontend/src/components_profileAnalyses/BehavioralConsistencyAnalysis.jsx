@@ -182,7 +182,7 @@ export default function BehavioralConsistencyAnalysis({ stats }) {
         </div>
 
         {/* Consistency Index Badge */}
-        <div className="flex items-center gap-2 self-start sm:self-auto rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-850 px-3 py-1.5">
+        <div className="flex items-center gap-2 self-start sm:self-auto rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 px-3 py-1.5">
           <Flame className="h-3.5 w-3.5 text-amber-500" />
           <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
             Consistency Index:
