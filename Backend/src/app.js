@@ -25,14 +25,9 @@ app.use(express.json()) //converts the json file to req.body so that the backend
 app.use(morgan('dev'))
 
 // ── Lightweight Health Check Route (Zero-overhead keep-alive for Render / cron-job.org) ──
-// Placed before authentication middleware so it uses zero DB/AI resources and responds in <2ms
-app.get(["/api/health", "/health"], (req, res) => {
-  res.status(200).json({
-    status: "ok",
-    service: "leetbuddy-backend",
-    uptime: Math.floor(process.uptime()),
-    timestamp: Date.now()
-  });
+// Placed before authentication middleware so it uses zero DB/AI resources and sends 2 bytes
+app.all(["/api/health", "/health"], (req, res) => {
+  res.status(200).send("OK");
 });
 
 // General verification middleware: runs before any request reaches the backend route handlers
