@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { useTheme } from '../hooks/useTheme.js'
 import Sidebar from '../components_dashboard/Sidebar.jsx'
 import DashHeader from '../components_dashboard/DashHeader.jsx'
+import BackToTop from '../components_dashboard/BackToTop.jsx'
+import ScrollProgress from '../components_dashboard/ScrollProgress.jsx'
 import TopicMasteryMatrix from '../components_profileAnalyses/TopicMasteryMatrix.jsx'
 import TopicDirectory from '../components_topicMastery/TopicDirectory.jsx'
 import { analyzeTopics } from '../utils/topicData.js'
@@ -69,11 +71,12 @@ export default function TopicMastery() {
       <Sidebar active={activeNav} setActive={setActiveNav} />
 
       {/* Main Page Area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden relative">
         <DashHeader user={user} stats={stats} />
+        <ScrollProgress containerId="main-content" />
 
         {/* Scrollable Content View */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+        <div id="main-content" tabIndex="-1" className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
           {/* ── Page Header Banner & Stat Scorecards ── */}
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -186,6 +189,9 @@ export default function TopicMastery() {
           {/* ── Container 2: Topic Directory (Dedicated Weak, Developing, Proficient tabs) ── */}
           <TopicDirectory topics={allTopics} />
         </div>
+
+        {/* Floating Back to Top Button */}
+        <BackToTop scrollContainerId="main-content" />
       </div>
     </div>
   )

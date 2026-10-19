@@ -59,14 +59,17 @@ export async function generateHeroCard(profileData = {}) {
     };
 
     const systemPrompt = `
-You are the elite AI Competitive Programming Mentor for 'LeetBuddy'.
-Analyze the following aggregated LeetCode performance statistics and synthesize a high-impact, human-readable "Hero Card" profile summary.
+You are a friendly, encouraging senior developer and coding mentor for 'LeetBuddy'.
+Analyze the following aggregated LeetCode performance statistics and synthesize a clear, helpful profile summary.
 
 CRITICAL TONE & STYLE RULES:
-- Identify an evocative developer Archetype (e.g. "Volume-Driven Problem Solver", "Algorithmic Precisionist", "Graph & Recursion Specialist", "Heuristic Strategist").
-- The summary MUST read like a high-level executive takeaway with actionable truth.
-- Follow this exact pattern for the summary:
-  "You are a [Archetype]. Your primary strength lies in [Top Topics], maintaining a [Acceptance Rate / Metric] on Mediums/Problems. However, [Weakness Topic or Hard conversion] represents a key bottleneck, indicating a [Specific Conceptual / Recognition Bottleneck]."
+- Speak in simple, everyday English—like a friendly senior engineer explaining things clearly over coffee.
+- Keep sentences short and direct (under 20 words where possible).
+- BANNED WORDS LIST: Do NOT use words like "bottleneck", "choke point", "choke", "telemetry", "asymptotic", "lethality", "paradigm", "circadian", "bleed", "autopsy", "heuristic", "manifest", "delve", or "testament".
+- Pick an approachable developer Archetype (e.g. "Practical Problem Solver", "Clean Code Builder", "Fast Implementation Specialist", "Core Algorithms Focused").
+- State the user's main strength in plain terms (e.g. strong in Arrays or Graphs).
+- State 1-2 areas to improve simply (e.g., "Your code runs too slowly when inputs get large" or "You often miss boundary cases like empty lists").
+- Zero Repetition: Do not repeat points between summary, strengths, and areas to improve.
 - Respond ONLY with valid, parseable raw JSON without markdown code fences (\`\`\`json).
 `;
 
@@ -76,12 +79,12 @@ ${JSON.stringify(inputMetrics, null, 2)}
 
 Required JSON Schema:
 {
-  "archetype": "string (3-4 words)",
-  "headline": "string (punchy 1-sentence tagline)",
-  "summary": "string (2-3 concise sentences)",
+  "archetype": "string (2-3 simple words)",
+  "headline": "string (clear 1-sentence tagline in plain English)",
+  "summary": "string (2 concise sentences in plain English)",
   "strengths": ["string", "string"],
   "bottlenecks": ["string", "string"],
-  "actionableTip": "string (1 actionable tip)"
+  "actionableTip": "string (1 simple, practical tip)"
 }
 `;
 

@@ -9,12 +9,12 @@ import { generateContestRemediation } from "../services/aiContestRemediation.ser
 export async function getContestByUsername(req, res) {
   try {
     const { username } = req.params;
-    if (!username) {
-      return res.status(400).json({ error: "Username parameter is required" });
+    if (!username || username.trim().toLowerCase() === "user" || username.trim().toLowerCase() === "developer") {
+      return res.status(400).json({ error: "Valid LeetCode username parameter is required" });
     }
 
-    const userId = req.user?.id || null;
-    const contestDoc = await getContestData(username, userId);
+    const userId = req.user?.id || req.user?._id || null;
+    const contestDoc = await getContestData(username.trim(), userId);
 
     if (!contestDoc) {
       return res.status(404).json({ error: `No contest telemetry found for user "${username}"` });
@@ -36,7 +36,7 @@ export async function getContestByUsername(req, res) {
  */
 export async function getMyContest(req, res) {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.id || req.user?._id;
     if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
     }
@@ -44,9 +44,9 @@ export async function getMyContest(req, res) {
     const user = await userModel.findById(userId);
     const username = user?.leetcode?.username;
 
-    if (!username) {
+    if (!username || !user?.leetcode?.isVerified) {
       return res.status(400).json({
-        error: "No LeetCode profile connected to this account. Please connect and verify your LeetCode handle first."
+        error: "No verified LeetCode profile connected to this account. Please connect and verify your LeetCode handle first."
       });
     }
 
@@ -68,19 +68,26 @@ export async function getMyContest(req, res) {
  */
 export async function syncContest(req, res) {
   try {
-    const userId = req.user?.id || null;
-    let username = req.body?.username;
+    const userId = req.user?.id || req.user?._id || null;
+    let username = null;
 
-    if (!username && userId) {
+    if (userId) {
       const user = await userModel.findById(userId);
-      username = user?.leetcode?.username;
+      if (!user?.leetcode?.username || !user?.leetcode?.isVerified) {
+        return res.status(400).json({
+          error: "No verified LeetCode profile connected to this account. Please verify your LeetCode profile first."
+        });
+      }
+      username = user.leetcode.username;
+    } else {
+      username = req.body?.username;
     }
 
-    if (!username) {
-      return res.status(400).json({ error: "LeetCode username is required to sync contest telemetry" });
+    if (!username || typeof username !== "string" || username.trim().toLowerCase() === "user" || username.trim().toLowerCase() === "developer") {
+      return res.status(400).json({ error: "Valid, verified LeetCode username is required to sync contest telemetry" });
     }
 
-    const contestDoc = await syncContestData(username, userId);
+    const contestDoc = await syncContestData(username.trim(), userId);
 
     return res.status(200).json({
       message: "Contest telemetry synced successfully",

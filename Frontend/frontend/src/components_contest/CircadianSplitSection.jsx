@@ -30,15 +30,15 @@ export default function CircadianSplitSection({ data }) {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-[10.5px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                05 / Circadian Rhythm
+                05 / TIME OF DAY
               </span>
               <span className="text-neutral-300 dark:text-neutral-700">•</span>
               <span className="font-mono text-[10.5px] font-medium text-neutral-500 dark:text-neutral-400">
-                Sunday 8:00 AM vs. Saturday 8:00 PM IST
+                Sunday Morning vs. Saturday Evening
               </span>
             </div>
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-              The Biological Clock Split
+              Morning (Weekly) vs. Evening (Biweekly) Performance
             </h2>
           </div>
         </div>
@@ -49,19 +49,19 @@ export default function CircadianSplitSection({ data }) {
         {diagnostic && (
           <div
             className={`rounded-xl border p-3.5 flex items-center gap-3 transition-colors ${
-              diagnostic.type === 'BLEED'
-                ? 'border-rose-200 bg-rose-50/70 text-rose-900 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200'
-                : diagnostic.type === 'SURGE'
-                ? 'border-blue-200 bg-blue-50/70 text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200'
+              diagnostic.type === 'EVENING_STRONGER' || diagnostic.type === 'BLEED'
+                ? 'border-indigo-200 bg-indigo-50/70 text-indigo-900 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-200'
+                : diagnostic.type === 'MORNING_STRONGER' || diagnostic.type === 'SURGE'
+                ? 'border-amber-200 bg-amber-50/70 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200'
                 : 'border-emerald-200 bg-emerald-50/70 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200'
             }`}
           >
             <div
               className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
-                diagnostic.type === 'BLEED'
-                  ? 'bg-rose-500 text-white'
-                  : diagnostic.type === 'SURGE'
-                  ? 'bg-blue-500 text-white'
+                diagnostic.type === 'EVENING_STRONGER' || diagnostic.type === 'BLEED'
+                  ? 'bg-indigo-500 text-white'
+                  : diagnostic.type === 'MORNING_STRONGER' || diagnostic.type === 'SURGE'
+                  ? 'bg-amber-500 text-white'
                   : 'bg-emerald-500 text-white'
               }`}
             >
@@ -105,19 +105,19 @@ export default function CircadianSplitSection({ data }) {
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div className="rounded-lg border border-neutral-200/70 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-950/70">
                   <span className="font-mono text-[10px] font-bold uppercase text-neutral-400 block">
-                    Win Rate (Rating UP)
+                    Rating Gain Rate
                   </span>
                   <span className="mt-1 font-mono text-xl font-extrabold text-neutral-900 dark:text-neutral-100 block">
                     {weekly.winRate}%
                   </span>
                   <span className="text-[10px] font-mono text-neutral-500">
-                    {weekly.wins} gains in {weekly.count} events
+                    {weekly.wins} gains in {weekly.count} contests
                   </span>
                 </div>
 
                 <div className="rounded-lg border border-neutral-200/70 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-950/70">
                   <span className="font-mono text-[10px] font-bold uppercase text-neutral-400 block">
-                    Avg Rating Delta
+                    Avg Rating Change
                   </span>
                   <span
                     className={`mt-1 font-mono text-xl font-extrabold block ${
@@ -133,25 +133,25 @@ export default function CircadianSplitSection({ data }) {
 
                 <div className="rounded-lg border border-neutral-200/70 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-950/70">
                   <span className="font-mono text-[10px] font-bold uppercase text-neutral-400 block">
-                    Avg Solved Count
+                    Avg Problems Solved
                   </span>
                   <span className="mt-1 font-mono text-xl font-extrabold text-neutral-900 dark:text-neutral-100 block">
                     {weekly.avgSolved} / 4
                   </span>
                   <span className="text-[10px] font-mono text-neutral-500">
-                    problems converted
+                    per contest
                   </span>
                 </div>
 
                 <div className="rounded-lg border border-neutral-200/70 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-950/70">
                   <span className="font-mono text-[10px] font-bold uppercase text-neutral-400 block">
-                    Avg Global Rank
+                    Average Rank
                   </span>
                   <span className="mt-1 font-mono text-xl font-extrabold text-neutral-900 dark:text-neutral-100 block">
                     #{weekly.avgRank.toLocaleString()}
                   </span>
                   <span className="text-[10px] font-mono text-neutral-500">
-                    mean finishing rank
+                    across all contests
                   </span>
                 </div>
               </div>
@@ -195,19 +195,19 @@ export default function CircadianSplitSection({ data }) {
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div className="rounded-lg border border-neutral-200/70 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-950/70">
                   <span className="font-mono text-[10px] font-bold uppercase text-neutral-400 block">
-                    Win Rate (Rating UP)
+                    Rating Gain Rate
                   </span>
                   <span className="mt-1 font-mono text-xl font-extrabold text-neutral-900 dark:text-neutral-100 block">
                     {biweekly.winRate}%
                   </span>
                   <span className="text-[10px] font-mono text-neutral-500">
-                    {biweekly.wins} gains in {biweekly.count} events
+                    {biweekly.wins} gains in {biweekly.count} contests
                   </span>
                 </div>
 
                 <div className="rounded-lg border border-neutral-200/70 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-950/70">
                   <span className="font-mono text-[10px] font-bold uppercase text-neutral-400 block">
-                    Avg Rating Delta
+                    Avg Rating Change
                   </span>
                   <span
                     className={`mt-1 font-mono text-xl font-extrabold block ${
@@ -223,25 +223,25 @@ export default function CircadianSplitSection({ data }) {
 
                 <div className="rounded-lg border border-neutral-200/70 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-950/70">
                   <span className="font-mono text-[10px] font-bold uppercase text-neutral-400 block">
-                    Avg Solved Count
+                    Avg Problems Solved
                   </span>
                   <span className="mt-1 font-mono text-xl font-extrabold text-neutral-900 dark:text-neutral-100 block">
                     {biweekly.avgSolved} / 4
                   </span>
                   <span className="text-[10px] font-mono text-neutral-500">
-                    problems converted
+                    per contest
                   </span>
                 </div>
 
                 <div className="rounded-lg border border-neutral-200/70 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-950/70">
                   <span className="font-mono text-[10px] font-bold uppercase text-neutral-400 block">
-                    Avg Global Rank
+                    Average Rank
                   </span>
                   <span className="mt-1 font-mono text-xl font-extrabold text-neutral-900 dark:text-neutral-100 block">
                     #{biweekly.avgRank.toLocaleString()}
                   </span>
                   <span className="text-[10px] font-mono text-neutral-500">
-                    mean finishing rank
+                    across all contests
                   </span>
                 </div>
               </div>

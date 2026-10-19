@@ -13,8 +13,8 @@ export const DEEP_DIVE_SECTIONS = [
   {
     id: 'section-panic-tax',
     step: '01',
-    label: 'Panic Tax',
-    sublabel: 'Solve vs. Penalty Bleed',
+    label: 'Penalty Time',
+    sublabel: 'Solve vs. Penalty Time',
     icon: Timer,
     status: 'ACTIVE'
   },
@@ -22,39 +22,39 @@ export const DEEP_DIVE_SECTIONS = [
     id: 'section-split-times',
     step: '02',
     label: 'Split Times',
-    sublabel: '5×4 Telemetry Matrix',
+    sublabel: 'Question Breakdown',
     icon: LayoutGrid,
     status: 'ACTIVE'
   },
   {
     id: 'section-root-causes',
     step: '03',
-    label: 'Root Causes',
-    sublabel: 'TLE / WA / RTE Engine',
+    label: 'Mistakes',
+    sublabel: 'Where Points Are Lost',
     icon: AlertTriangle,
     status: 'ACTIVE'
   },
   {
     id: 'section-bleeding-remediation',
     step: '04',
-    label: 'Remediation',
-    sublabel: 'AI Weak Topics & Drills',
+    label: 'Practice Plan',
+    sublabel: 'Targeted Practice Drills',
     icon: Sparkles,
     status: 'ACTIVE'
   },
   {
     id: 'section-biological-clock',
     step: '05',
-    label: 'Bio Clock',
-    sublabel: 'Weekly vs. Biweekly',
+    label: 'Time Slots',
+    sublabel: 'Morning vs. Evening',
     icon: Clock,
     status: 'ACTIVE'
   },
   {
     id: 'section-career-ledger',
     step: '06',
-    label: 'Ledger',
-    sublabel: 'Horizon & History Table',
+    label: 'Career History',
+    sublabel: 'Ratings & Contest Log',
     icon: Trophy,
     status: 'ACTIVE'
   }
@@ -88,7 +88,7 @@ export default function DeepDiveStepperHeader({ activeSectionId, onSelectSection
           <div className="flex items-center gap-2">
             <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-              Contest Deep Dive Telemetry
+              Contest Deep Dive
             </span>
             <span className="text-neutral-300 dark:text-neutral-700">•</span>
             <span className="font-mono text-[11px] text-neutral-600 dark:text-neutral-300 font-semibold">
@@ -97,7 +97,7 @@ export default function DeepDiveStepperHeader({ activeSectionId, onSelectSection
           </div>
 
           <span className="font-mono text-[10px] uppercase tracking-wider text-neutral-400 dark:text-neutral-500 hidden sm:inline-block">
-            {currentStepIndex + 1} of 6 Milestones
+            {currentStepIndex + 1} of 6 Sections
           </span>
         </div>
 

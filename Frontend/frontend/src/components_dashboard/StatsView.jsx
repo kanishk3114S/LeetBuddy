@@ -15,6 +15,8 @@ import { calculateRank } from '../utils/rankings.js'
 import { analyzeTopics } from '../utils/topicData.js'
 import { normalizeProfileData } from '../utils/profileData.js'
 import BadgeImage from '../components_profileAnalyses/BadgeImage.jsx'
+import BackToTop from './BackToTop.jsx'
+import ScrollProgress from './ScrollProgress.jsx'
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -153,7 +155,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
   // 1. Normalize data structure to ensure 100% contract compatibility
   const profileData = useMemo(() => normalizeProfileData(stats), [stats])
 
-  const username = profileData?.username || 'user'
+  const username = profileData?.username || stats?.username || stats?.profile?.username || localStorage.getItem('lb_username') || ''
   const s = profileData?.stats || {}
   const act = profileData?.activity || {}
   const badges = profileData?.badges || []
@@ -209,6 +211,11 @@ export default function StatsView({ stats, onStatsUpdate }) {
   const handleRefresh = async () => {
     if (isRefreshing || cooldown > 0) return
 
+    if (!username || username === 'user') {
+      setRefreshNotice({ type: 'warning', text: 'No verified LeetCode profile connected.' })
+      return
+    }
+
     setIsRefreshing(true)
     setRefreshNotice(null)
 
@@ -263,6 +270,9 @@ export default function StatsView({ stats, onStatsUpdate }) {
 
         // Update localStorage and trigger global notification
         localStorage.setItem('lb_stats', JSON.stringify(refreshedData))
+        const nowIso = new Date().toISOString()
+        localStorage.setItem('lb_last_synced_at', nowIso)
+        window.dispatchEvent(new CustomEvent('lb_sync_completed', { detail: nowIso }))
         if (onStatsUpdate) {
           onStatsUpdate(refreshedData)
         }
@@ -397,7 +407,9 @@ export default function StatsView({ stats, onStatsUpdate }) {
   const currentRank = calculateRank(s?.leetBuddyPoints ?? 3250)
 
   return (
-    <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+    <div className="relative flex-1 flex flex-col overflow-hidden">
+      <ScrollProgress containerId="main-content" />
+      <div id="main-content" tabIndex="-1" className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
       {/* ── Top Header Bar ─────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* Profile Group */}
@@ -931,6 +943,8 @@ export default function StatsView({ stats, onStatsUpdate }) {
             </div>
           )}
         </div>
+      </div>
+      <BackToTop scrollContainerId="main-content" />
       </div>
     </div>
   )

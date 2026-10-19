@@ -148,9 +148,9 @@ export function computeRankDistributionMatrix(contestHistory = []) {
     {
       id: "elite",
       tier: "Tier 1",
-      label: "Elite",
+      label: "Top 1,000",
       range: "< 1,000",
-      description: "Sub-1k Leaderboard",
+      description: "Top 1,000 Worldwide",
       count: eliteCount,
       percentage: calcPercent(eliteCount),
       color: "#10b981", // emerald
@@ -160,9 +160,9 @@ export function computeRankDistributionMatrix(contestHistory = []) {
     {
       id: "contender",
       tier: "Tier 2",
-      label: "Contender",
+      label: "1,000 – 5,000",
       range: "1,000 – 5,000",
-      description: "Top Tier Cohort",
+      description: "Top 5,000 Worldwide",
       count: contenderCount,
       percentage: calcPercent(contenderCount),
       color: "#3b82f6", // blue
@@ -172,9 +172,9 @@ export function computeRankDistributionMatrix(contestHistory = []) {
     {
       id: "competitor",
       tier: "Tier 3",
-      label: "Competitor",
+      label: "5,001 – 10,000",
       range: "5,001 – 10,000",
-      description: "Solid Placement",
+      description: "Top 10,000 Worldwide",
       count: competitorCount,
       percentage: calcPercent(competitorCount),
       color: "#f59e0b", // amber
@@ -184,9 +184,9 @@ export function computeRankDistributionMatrix(contestHistory = []) {
     {
       id: "participant",
       tier: "Tier 4",
-      label: "Participant",
+      label: "Above 10,000",
       range: "> 10,000",
-      description: "Field Placement",
+      description: "Rank 10,000+",
       count: participantCount,
       percentage: calcPercent(participantCount),
       color: "#8b5cf6", // violet
@@ -202,17 +202,17 @@ export function computeRankDistributionMatrix(contestHistory = []) {
 }
 
 /**
- * Computes problem-solving lethality & solve ratio matrix (All Kills to 1/4 + 0/4 secondary metric).
+ * Computes problem-solving solve ratio matrix (Full Clear to 1/4 + 0/4 secondary metric).
  * 
  * Categories:
- * - 4/4 (All Kills / Full Clear): problemsSolved >= 4
- * - 3/4 (Strong Finish): problemsSolved === 3
- * - 2/4 (Standard Solve): problemsSolved === 2
- * - 1/4 (Single Solve): problemsSolved === 1
+ * - 4/4 (Full Clear): problemsSolved >= 4
+ * - 3/4 (3 Solved): problemsSolved === 3
+ * - 2/4 (2 Solved): problemsSolved === 2
+ * - 1/4 (1 Solved): problemsSolved === 1
  * - 0/4 (Zero Solves): problemsSolved === 0
  * 
  * @param {Array} contestHistory
- * @returns {Object} Lethality & solve ratio matrix
+ * @returns {Object} Solve ratio matrix
  */
 export function computeSolveEfficiencyMatrix(contestHistory = []) {
   const history = Array.isArray(contestHistory) ? contestHistory : [];
@@ -244,8 +244,8 @@ export function computeSolveEfficiencyMatrix(contestHistory = []) {
   const tiers = [
     {
       id: "4/4",
-      label: "4/4",
-      title: "All Kills",
+      label: "4/4 Solved",
+      title: "Full Clear",
       solvedCount: 4,
       totalProblems: 4,
       count: allKillsCount,
@@ -257,8 +257,8 @@ export function computeSolveEfficiencyMatrix(contestHistory = []) {
     },
     {
       id: "3/4",
-      label: "3/4",
-      title: "Strong Finish",
+      label: "3/4 Solved",
+      title: "3 Solved",
       solvedCount: 3,
       totalProblems: 4,
       count: threeCount,
@@ -270,8 +270,8 @@ export function computeSolveEfficiencyMatrix(contestHistory = []) {
     },
     {
       id: "2/4",
-      label: "2/4",
-      title: "Standard Solve",
+      label: "2/4 Solved",
+      title: "2 Solved",
       solvedCount: 2,
       totalProblems: 4,
       count: twoCount,
@@ -283,8 +283,8 @@ export function computeSolveEfficiencyMatrix(contestHistory = []) {
     },
     {
       id: "1/4",
-      label: "1/4",
-      title: "Single Solve",
+      label: "1/4 Solved",
+      title: "1 Solved",
       solvedCount: 1,
       totalProblems: 4,
       count: oneCount,

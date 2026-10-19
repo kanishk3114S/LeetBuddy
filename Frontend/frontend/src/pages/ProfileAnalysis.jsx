@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import Sidebar from '../components_dashboard/Sidebar.jsx'
 import DashHeader from '../components_dashboard/DashHeader.jsx'
+import BackToTop from '../components_dashboard/BackToTop.jsx'
+import ScrollProgress from '../components_dashboard/ScrollProgress.jsx'
 import ProgressMountain from '../components_profileAnalyses/ProgressMountain.jsx'
 import DifficultyPointsMatrix from '../components_profileAnalyses/DifficultyPointsMatrix.jsx'
 import BehavioralConsistencyAnalysis from '../components_profileAnalyses/BehavioralConsistencyAnalysis.jsx'
@@ -43,11 +45,12 @@ export default function ProfileAnalysis() {
       <Sidebar active={activeNav} setActive={setActiveNav} />
 
       {/* Main Area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden relative">
         <DashHeader user={user} stats={stats} />
+        <ScrollProgress containerId="main-content" />
 
         {/* Content View with Core Profile Analytics Containers */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+        <div id="main-content" tabIndex="-1" className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
           {/* Container 1: Progress Mountain & Floating Hero Card */}
           <ProgressMountain leetBuddyPoints={leetBuddyPoints} stats={stats} />
 
@@ -57,6 +60,9 @@ export default function ProfileAnalysis() {
           {/* Container 3: Behavioral & Consistency Analysis (Temporal Patterns) */}
           <BehavioralConsistencyAnalysis stats={stats} />
         </div>
+
+        {/* Floating Back to Top Button */}
+        <BackToTop scrollContainerId="main-content" />
       </div>
     </div>
   )

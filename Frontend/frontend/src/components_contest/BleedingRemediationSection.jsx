@@ -94,15 +94,15 @@ export default function BleedingRemediationSection({ username, initialRemediatio
           <div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-[10.5px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                04 / AI Remediation
+                04 / PRACTICE PLAN
               </span>
               <span className="text-neutral-300 dark:text-neutral-700">•</span>
               <span className="font-mono text-[10.5px] font-medium text-neutral-500 dark:text-neutral-400">
-                Weak Topics & Sister Practice
+                Weak Topics & Practice Problems
               </span>
             </div>
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-              Bleeding-Question Remediation Pipeline
+              How to Improve & Problems to Practice
             </h2>
           </div>
         </div>
@@ -116,7 +116,7 @@ export default function BleedingRemediationSection({ username, initialRemediatio
             className="flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50/80 px-3 py-1 font-mono text-[11px] font-bold text-indigo-700 transition hover:bg-indigo-100 dark:border-indigo-900/60 dark:bg-indigo-950/60 dark:text-indigo-300 dark:hover:bg-indigo-900/80 disabled:opacity-50"
           >
             <RotateCw className={`h-3.5 w-3.5 ${isRegenerating ? 'animate-spin' : ''}`} />
-            <span>{isRegenerating ? 'Regenerating...' : 'Regenerate Analysis'}</span>
+            <span>{isRegenerating ? 'Refreshing...' : 'Refresh Advice'}</span>
           </button>
         </div>
       </div>
@@ -135,10 +135,10 @@ export default function BleedingRemediationSection({ username, initialRemediatio
               <Sparkles className="h-6 w-6" />
             </div>
             <h4 className="font-heading text-sm font-bold text-neutral-800 dark:text-neutral-200">
-              Synthesizing Algorithmic Remediation Blueprint...
+              Finding the Best Practice Problems...
             </h4>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-sm mx-auto font-sans">
-              Scanning your last 5 contests for TLEs, penalty bleed, and unreached ceilings to extract high-yield practice directives.
+              Reviewing your last 5 contests to find the patterns you missed and recommending problems to practice.
             </p>
           </div>
         )}
@@ -151,14 +151,14 @@ export default function BleedingRemediationSection({ username, initialRemediatio
               <div className="flex items-center justify-between mb-3.5">
                 <div>
                   <h3 className="text-sm sm:text-base font-bold text-neutral-900 dark:text-neutral-100">
-                    Contest Weak-Topic Diagnoses & Practice Prescription
+                    Key Topics to Practice
                   </h3>
                   <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                    Specific algorithmic patterns breaking down under the 90-minute contest timer
+                    Topics where you ran into errors or ran out of time
                   </p>
                 </div>
                 <span className="font-mono text-[11px] text-neutral-400 hidden sm:inline-block">
-                  {weakTopics.length} Diagnosed Bottleneck{weakTopics.length !== 1 ? 's' : ''}
+                  {weakTopics.length} Focus Area{weakTopics.length !== 1 ? 's' : ''}
                 </span>
               </div>
 
@@ -183,7 +183,7 @@ export default function BleedingRemediationSection({ username, initialRemediatio
                           </h4>
                         </div>
                         <span className="shrink-0 rounded-md border border-neutral-200 bg-white px-2 py-0.5 font-mono text-[10px] font-bold text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
-                          High Tax
+                          Needs Focus
                         </span>
                       </div>
 
@@ -196,7 +196,7 @@ export default function BleedingRemediationSection({ username, initialRemediatio
                       {item.symptoms && item.symptoms.length > 0 && (
                         <div className="mb-4 rounded-lg border border-neutral-200/70 bg-white/80 p-3 dark:border-neutral-800 dark:bg-neutral-950/80">
                           <span className="block font-mono text-[10px] font-bold uppercase text-neutral-400 mb-1.5">
-                            Observed Contest Failure Symptoms:
+                            What Happened in Contests:
                           </span>
                           <ul className="space-y-1 text-[11.5px] text-neutral-600 dark:text-neutral-300 font-sans">
                             {item.symptoms.map((symptom, sIdx) => (
@@ -210,15 +210,15 @@ export default function BleedingRemediationSection({ username, initialRemediatio
                       )}
                     </div>
 
-                    {/* Curated Sister Problems Prescription */}
+                    {/* Practice Problems Prescription */}
                     <div className="border-t border-neutral-200/70 pt-3 dark:border-neutral-800">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-mono text-[10.5px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5">
                           <Target className="h-3 w-3 text-emerald-500" />
-                          Curated Sister Problems:
+                          Practice Similar Problems:
                         </span>
                         <span className="text-[10px] font-mono text-neutral-400">
-                          Target Drills
+                          Practice Drills
                         </span>
                       </div>
 
@@ -259,19 +259,19 @@ export default function BleedingRemediationSection({ username, initialRemediatio
               </div>
             </div>
 
-            {/* PART 2: Question-by-Question Method to Solve Blueprints */}
+            {/* PART 2: Question-by-Question Method to Solve */}
             <div className="pt-2">
               <div className="flex items-center justify-between mb-3.5">
                 <div>
                   <h3 className="text-sm sm:text-base font-bold text-neutral-900 dark:text-neutral-100">
-                    Question-by-Question Blueprint & Upsolve Hub
+                    Contest Problem Walkthroughs
                   </h3>
                   <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                    Optimal algorithmic method, complexity targets, and ratings-bleed autopsy for each problem
+                    Simple tricks and clean approaches for the questions you missed
                   </p>
                 </div>
                 <span className="font-mono text-[11px] text-neutral-400 hidden sm:inline-block">
-                  {blueprints.length} Blueprint{blueprints.length !== 1 ? 's' : ''} Generated
+                  {blueprints.length} Problem{blueprints.length !== 1 ? 's' : ''}
                 </span>
               </div>
 
@@ -293,7 +293,7 @@ export default function BleedingRemediationSection({ username, initialRemediatio
                             </span>
                             <span className="text-neutral-300 dark:text-neutral-700">•</span>
                             <span className="font-mono text-[10px] font-bold text-neutral-500 dark:text-neutral-400">
-                              Bleed Question #{bIdx + 1}
+                              Missed Question #{bIdx + 1}
                             </span>
                           </div>
                           <h4 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
@@ -302,7 +302,7 @@ export default function BleedingRemediationSection({ username, initialRemediatio
                         </div>
                       </div>
 
-                      {/* Upsolve CTA Link Button */}
+                      {/* Practice CTA Link Button */}
                       <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                         <a
                           href={`https://leetcode.com/problems/${bp.titleSlug}/`}
@@ -310,16 +310,16 @@ export default function BleedingRemediationSection({ username, initialRemediatio
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-900 bg-neutral-900 px-3 py-1.5 font-mono text-xs font-bold text-white transition hover:bg-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700 shadow-2xs"
                         >
-                          <span>Upsolve on LeetCode</span>
+                          <span>Practice on LeetCode</span>
                           <ExternalLink className="h-3 w-3" />
                         </a>
                       </div>
                     </div>
 
-                    {/* Why You Bled Card */}
+                    {/* What Went Wrong Card */}
                     <div className="mt-3.5 rounded-lg border border-rose-100 bg-rose-50/50 p-2.5 dark:border-rose-950/60 dark:bg-rose-950/20">
                       <span className="font-mono text-[10px] font-extrabold uppercase tracking-wider text-rose-600 dark:text-rose-400">
-                        Why You Bled Rating:
+                        What Went Wrong:
                       </span>
                       <p className="mt-0.5 text-xs text-neutral-700 dark:text-neutral-300 font-sans">
                         {bp.whyYouBled}
@@ -331,7 +331,7 @@ export default function BleedingRemediationSection({ username, initialRemediatio
                       <div className="lg:col-span-2">
                         <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1 mb-1">
                           <BookOpen className="h-3 w-3 text-indigo-500" />
-                          Core Trick / Optimal Method:
+                          Simple Approach to Solve It:
                         </span>
                         <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed font-sans">
                           {bp.coreTrick}
@@ -341,7 +341,7 @@ export default function BleedingRemediationSection({ username, initialRemediatio
                       {/* Target Complexity Pill */}
                       <div className="flex flex-col justify-center rounded-lg border border-neutral-200 bg-neutral-50/70 p-2.5 dark:border-neutral-800 dark:bg-neutral-950/80">
                         <span className="font-mono text-[10px] font-bold uppercase text-neutral-400">
-                          Target Complexity:
+                          Target Run Time:
                         </span>
                         <span className="mt-0.5 font-mono text-xs font-extrabold text-indigo-600 dark:text-indigo-400">
                           {bp.targetComplexity || 'O(N log N) time • O(1) space'}

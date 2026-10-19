@@ -118,7 +118,7 @@ export default function TopicMasteryMatrix({ stats }) {
         tag = 'Critical Weakness'
         tierType = 'weak'
         tagIcon = '🔴'
-        diagnostic = 'High attempt volume with frequent timeouts. Recurrence & state design bottleneck.'
+        diagnostic = 'High attempt volume with frequent timeouts. Needs more practice with recurrence and state design.'
       } else if (cluster.name === 'Graphs') {
         accuracy = 58
         tag = 'Developing'

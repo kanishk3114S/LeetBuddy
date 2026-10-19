@@ -284,26 +284,26 @@ export default function HeroCard({ stats, rank }) {
               </p>
             )}
 
-            {/* ── Symmetrical Executive Takeaway Callout Box ── */}
+            {/* ── Coach Summary Callout Box ── */}
             <div className="relative z-10 rounded-xl border border-neutral-200 bg-neutral-50/90 dark:border-neutral-800/90 dark:bg-neutral-900/70 p-4 shadow-inner">
               <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 dark:text-neutral-500 font-extrabold block mb-1.5">
-                Executive Takeaway
+                Coach Summary
               </span>
               <p className="text-xs sm:text-[13px] leading-relaxed text-neutral-800 dark:text-neutral-200 font-normal">
                 {summary}
               </p>
             </div>
 
-            {/* ── Core Strengths & Bottlenecks: Balanced 2-Column Grid ── */}
+            {/* ── Strongest Skills & Areas to Improve: Balanced 2-Column Grid ── */}
             <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Strengths Card */}
               <div className="flex flex-col justify-between rounded-xl border border-neutral-200 bg-neutral-50/80 dark:border-neutral-800/90 dark:bg-neutral-900/40 p-3.5 space-y-2">
                 <div className="flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span>Dominant Strengths</span>
+                  <span>Your Strongest Skills</span>
                 </div>
                 <ul className="space-y-1.5 text-xs text-neutral-700 dark:text-neutral-300">
-                  {(heroCard?.strengths || ['High Medium-solve volume', 'Consistent execution velocity']).map((s, idx) => (
+                  {(heroCard?.strengths || ['Strong Medium-level solving count', 'Consistent problem-solving pace']).map((s, idx) => (
                     <li key={idx} className="flex items-start gap-1.5">
                       <span className="text-emerald-500 font-bold shrink-0 leading-none mt-0.5">•</span>
                       <span className="leading-tight">{s}</span>
@@ -312,14 +312,14 @@ export default function HeroCard({ stats, rank }) {
                 </ul>
               </div>
 
-              {/* Bottlenecks Card */}
+              {/* Areas to Improve Card */}
               <div className="flex flex-col justify-between rounded-xl border border-neutral-200 bg-neutral-50/80 dark:border-neutral-800/90 dark:bg-neutral-900/40 p-3.5 space-y-2">
                 <div className="flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                   <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                  <span>Primary Bottlenecks</span>
+                  <span>Areas to Improve</span>
                 </div>
                 <ul className="space-y-1.5 text-xs text-neutral-700 dark:text-neutral-300">
-                  {(heroCard?.bottlenecks || ['Dynamic Programming recurrence', 'Hard-level decomposition']).map((b, idx) => (
+                  {(heroCard?.bottlenecks || ['Dynamic Programming recurrence', 'Hard-level problems']).map((b, idx) => (
                     <li key={idx} className="flex items-start gap-1.5">
                       <span className="text-amber-500 font-bold shrink-0 leading-none mt-0.5">•</span>
                       <span className="leading-tight">{b}</span>
@@ -329,13 +329,13 @@ export default function HeroCard({ stats, rank }) {
               </div>
             </div>
 
-            {/* ── Actionable Directive Banner ── */}
+            {/* ── Recommended Next Step Banner ── */}
             {heroCard?.actionableTip && (
               <div className="relative z-10 rounded-xl border border-neutral-200 bg-neutral-50/80 dark:border-neutral-800 dark:bg-neutral-900/40 p-3 flex items-start gap-2.5 text-xs">
                 <Target className="h-4 w-4 text-indigo-500 dark:text-indigo-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <span className="font-mono text-[10px] uppercase tracking-wider font-bold text-neutral-700 dark:text-neutral-300 block">
-                    Actionable Directive
+                    Recommended Next Step
                   </span>
                   <p className="text-neutral-600 dark:text-neutral-400 text-[11px] leading-relaxed">
                     {heroCard.actionableTip}

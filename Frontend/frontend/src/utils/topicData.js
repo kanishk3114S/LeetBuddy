@@ -145,7 +145,7 @@ export const TOPIC_DEFINITIONS = [
     name: 'Greedy',
     slug: 'greedy',
     category: 'intermediate',
-    diagnostic: 'Good heuristic instinct on interval scheduling; prone to false local optima on problems requiring DP exchange arguments.',
+    diagnostic: 'Good intuition on interval scheduling; needs practice verifying when greedy choices fail and require DP.',
     defaultSolved: 45,
     defaultAccuracy: 65
   },
@@ -219,7 +219,7 @@ export const TOPIC_DEFINITIONS = [
     name: 'Dynamic Programming',
     slug: 'dynamic-programming',
     category: 'advanced',
-    diagnostic: 'Critical recognition bottleneck. Struggles with 2D state formulation, 0/1 knapsack variants, and space compression.',
+    diagnostic: 'Needs focused practice. Struggles with 2D grid states, 0/1 knapsack problems, and space optimization.',
     defaultSolved: 48,
     defaultAccuracy: 38
   },
@@ -291,7 +291,7 @@ export const TOPIC_DEFINITIONS = [
     name: 'Divide and Conquer',
     slug: 'divide-and-conquer',
     category: 'advanced',
-    diagnostic: 'Good on merge sort paradigms; struggles on master theorem edge cases and geometric divide-and-conquer.',
+    diagnostic: 'Good on merge sort patterns; struggles on edge cases and geometric divide-and-conquer.',
     defaultSolved: 20,
     defaultAccuracy: 62
   },

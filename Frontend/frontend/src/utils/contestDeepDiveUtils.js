@@ -167,14 +167,14 @@ export function computePanicTaxTelemetry(recentFiveContests = [], contestHistory
   let verdict = null;
   if (totalAcceptedFails > 0 && maxPenaltyContest) {
     verdict = {
-      headline: `Avoidable Penalty Bleed: +${totalPenaltyMinutes}m Tax`,
-      summary: `Across your last ${transformedContests.length} contests, you accumulated +${totalPenaltyMinutes}m in penalty tax across ${totalAcceptedFails} wrong submissions on solved problems—costing you an estimated ~${totalEstimatedRankLoss.toLocaleString()} rank positions.`,
-      highlightContest: `In ${maxPenaltyContest.contestTitle}, you spent ${maxPenaltyContest.pureSolveTimeFormatted} coding and added +${maxPenaltyContest.penaltyMinutes}m in penalty tax (${maxPenaltyContest.acceptedFails} fails)—bleeding an estimated ~${maxPenaltyContest.estimatedRankLoss.toLocaleString()} positions.`
+      headline: `Penalty Time: +${totalPenaltyMinutes}m Added`,
+      summary: `Across your last ${transformedContests.length} contests, you added +${totalPenaltyMinutes}m in penalty time across ${totalAcceptedFails} wrong submissions on solved problems. This pushed your rank back by roughly ~${totalEstimatedRankLoss.toLocaleString()} positions.`,
+      highlightContest: `In ${maxPenaltyContest.contestTitle}, you spent ${maxPenaltyContest.pureSolveTimeFormatted} coding and added +${maxPenaltyContest.penaltyMinutes}m in penalty time (${maxPenaltyContest.acceptedFails} wrong tries)—costing an estimated ~${maxPenaltyContest.estimatedRankLoss.toLocaleString()} places.`
     };
   } else {
     verdict = {
-      headline: `Flawless First-Attempt Execution (0m Penalty Tax)`,
-      summary: `Zero penalty minutes incurred across all solved problems in your evaluated contests. Every point gained was pure solve speed.`,
+      headline: `Clean Solves (0m Penalty Time)`,
+      summary: `Zero penalty minutes incurred across all solved problems in your evaluated contests. Every point gained was from clean solve speed.`,
       highlightContest: null
     };
   }
@@ -249,21 +249,20 @@ export function computeSplitTimeMatrix(recentFiveContests = []) {
       if (isAccepted) {
         if (fails === 0 && splitSeconds <= benchmarkSec * 1.25) {
           state = 'CLEAN';
-          stateLabel = 'Clean Solve';
+          stateLabel = 'Solved Cleanly';
           stateColor = 'emerald';
         } else {
           state = 'SLOW';
-          stateLabel = fails > 0 ? `Slow Solve (+${fails * 5}m)` : 'Slow Solve';
+          stateLabel = fails > 0 ? `Solved (+${fails * 5}m penalty)` : 'Solved (Slow)';
           stateColor = 'amber';
         }
       } else if (fails > 0 || q.status !== 'Not Attempted') {
-
         state = 'BRICK_WALL';
-        stateLabel = q.errorCause || q.status || 'Failed Attempt';
+        stateLabel = q.errorCause || q.status || 'Unsolved (Wrong Tries)';
         stateColor = 'rose';
       } else {
         state = 'UNTOUCHED';
-        stateLabel = 'Starved / Clock Runout';
+        stateLabel = 'Not Attempted';
         stateColor = 'slate';
       }
 
@@ -403,7 +402,7 @@ export function computeRootCauseTelemetry(recentFiveContests = []) {
     {
       id: 'wa',
       key: 'EDGE_CASE_PANIC',
-      title: 'Edge-Case & Greedy Panic',
+      title: 'Missed Edge Cases (Wrong Answer)',
       code: 'WA',
       label: 'Wrong Answer Submissions',
       count: waCount,
@@ -413,12 +412,12 @@ export function computeRootCauseTelemetry(recentFiveContests = []) {
       accentBorder: 'border-amber-500/20',
       accentText: 'text-amber-400',
       barColor: 'bg-amber-500',
-      description: 'Premature submissions on unproven greedy assumptions or missed boundary cases (n = 1, duplicates, overflow).'
+      description: 'Submitting too quickly without testing small boundary cases like empty arrays, single elements, or large numbers.'
     },
     {
       id: 'tle',
       key: 'COMPLEXITY_BOTTLENECK',
-      title: 'Complexity Bottleneck',
+      title: 'Too Slow (TLE)',
       code: 'TLE',
       label: 'Time Limit Exceeded',
       count: tleCount,
@@ -428,12 +427,12 @@ export function computeRootCauseTelemetry(recentFiveContests = []) {
       accentBorder: 'border-rose-500/20',
       accentText: 'text-rose-400',
       barColor: 'bg-rose-500',
-      description: 'Writing working O(N²) brute-force code, but freezing when optimizing to O(N log N), monotonic queues, or DP.'
+      description: 'Your solution works on small inputs, but runs too slowly on large inputs.'
     },
     {
       id: 'rte',
       key: 'MEMORY_INDEXING_SLOPPINESS',
-      title: 'Memory & Indexing Sloppiness',
+      title: 'Code Crashed (Runtime Error)',
       code: 'RTE',
       label: 'Runtime / Memory Error',
       count: rteCount,
@@ -443,14 +442,14 @@ export function computeRootCauseTelemetry(recentFiveContests = []) {
       accentBorder: 'border-purple-500/20',
       accentText: 'text-purple-400',
       barColor: 'bg-purple-500',
-      description: 'Vector out-of-bounds indexing, base-case recursion stack overflow, or integer division by zero under time pressure.'
+      description: 'Index out of bounds, dividing by zero, or exceeding recursion stack limits.'
     },
     {
       id: 'slow',
       key: 'IMPLEMENTATION_DRAG',
-      title: 'Implementation Drag',
+      title: 'Took Too Long to Code',
       code: 'SLOW',
-      label: 'Exceeded Split Benchmark',
+      label: 'Slower Than Usual',
       count: slowAcCount,
       percentage: pct(slowAcCount),
       color: 'blue',
@@ -458,7 +457,7 @@ export function computeRootCauseTelemetry(recentFiveContests = []) {
       accentBorder: 'border-blue-500/20',
       accentText: 'text-blue-400',
       barColor: 'bg-blue-500',
-      description: 'Correct algorithmic logic identified, but implementation took > 25% longer than benchmark pacing.'
+      description: 'You found the right approach, but spent extra time writing and debugging the solution.'
     }
   ];
 
@@ -488,18 +487,18 @@ export function computeRootCauseTelemetry(recentFiveContests = []) {
       totalMistakes: totalSlotMistakes,
       sharePercentage: slotSharePct,
       dominantType,
-      headline: `${maxSlot.slot} is your primary rating killer`,
-      summary: `${slotSharePct}% of your contest mistake penalties (${totalSlotMistakes} incidents) concentrate on ${maxSlot.slot}, predominantly driven by ${dominantType}.`
+      headline: `${maxSlot.slot} is where you lose the most time and points`,
+      summary: `${slotSharePct}% of your contest mistakes (${totalSlotMistakes} incidents) happened on ${maxSlot.slot}, mostly from ${dominantType}.`
     };
   } else {
     primaryChokeSlot = {
       slot: 'None',
-      label: 'All Slots Clean',
+      label: 'All Questions Clean',
       totalMistakes: 0,
       sharePercentage: 0,
       dominantType: 'Clean Solves',
-      headline: 'Flawless Execution Across All Slots',
-      summary: 'No penalty concentrations or diagnostic bottlenecks detected in recent contests.'
+      headline: 'Clean Execution Across All Questions',
+      summary: 'No major time loss or penalty mistakes detected in recent contests.'
     };
   }
 
@@ -574,21 +573,21 @@ export function computeCircadianSplitTelemetry(contestHistory = []) {
     const gap = Number((biweeklyStats.avgDelta - weeklyStats.avgDelta).toFixed(1));
     if (gap >= 8) {
       diagnostic = {
-        type: 'BLEED',
-        headline: 'Circadian Bleed Detected',
-        text: `You average ${Math.abs(gap)} fewer rating points on Sunday mornings (Weekly) compared to Saturday evenings (Biweekly).`
+        type: 'EVENING_STRONGER',
+        headline: 'Evening Contests Stronger',
+        text: `You score an average of ${Math.abs(gap)} more rating points in Saturday evening contests compared to Sunday mornings.`
       };
     } else if (gap <= -8) {
       diagnostic = {
-        type: 'SURGE',
-        headline: 'Morning Peak Detected',
-        text: `You average ${Math.abs(gap)} higher rating points on Sunday mornings (Weekly) compared to Saturday evenings (Biweekly).`
+        type: 'MORNING_STRONGER',
+        headline: 'Morning Contests Stronger',
+        text: `You score an average of ${Math.abs(gap)} more rating points in Sunday morning contests compared to Saturday evenings.`
       };
     } else {
       diagnostic = {
         type: 'BALANCED',
-        headline: 'Balanced Circadian Rhythm',
-        text: `High consistency across morning and evening slots (±${Math.abs(gap)} pts variance between formats).`
+        headline: 'Consistent Time Performance',
+        text: `Similar performance across morning and evening contests (only ±${Math.abs(gap)} points difference).`
       };
     }
   }

@@ -20,7 +20,7 @@ export default function SplitTimeAutopsySection({ matrixData }) {
         className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900"
       >
         <p className="text-sm font-mono text-neutral-500">
-          No question telemetry available for Split-Time Autopsy.
+          No question timing data available.
         </p>
       </div>
     )
@@ -33,25 +33,24 @@ export default function SplitTimeAutopsySection({ matrixData }) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="font-mono text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
-              02 / TELEMETRY
+              02 / TIMING BREAKDOWN
             </span>
             <span className="text-neutral-300 dark:text-neutral-700">•</span>
             <span className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400">
-              Lap Splits & Pacing Telemetry
+              Question-by-Question Pace
             </span>
           </div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-            90-Minute Split-Time Autopsy & Slow Solve Matrix
+            Last 5 Contests: Question-by-Question Breakdown
           </h2>
           <p className="mt-1 text-xs sm:text-[13px] text-neutral-500 dark:text-neutral-400 max-w-3xl">
-            A solved problem isn't always a victory. If Q2 takes 40 minutes with 3 wrong answers, that{' '}
-            <strong className="text-neutral-800 dark:text-neutral-200">"Slow Solve"</strong> starved Q3 of time
-            and added +15m penalty—ruining your rating trajectory before you even saw Q4.
+            A solved problem isn't always a victory. Taking 40 minutes on Question 2 leaves too little time for
+            Question 3 and adds extra penalty time to your contest clock.
           </p>
         </div>
       </div>
 
-      {/* ── Engineering State Legend Bar ─────────────────────────────── */}
+      {/* ── Legend Bar ─────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
         <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/70 p-2.5 dark:border-emerald-950/60 dark:bg-emerald-950/20">
           <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
@@ -59,10 +58,10 @@ export default function SplitTimeAutopsySection({ matrixData }) {
           </div>
           <div>
             <span className="block font-mono text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
-              Clean Solve
+              Solved Cleanly
             </span>
             <span className="block text-[9.5px] text-emerald-700 dark:text-emerald-400">
-              AC with 0 fails & fast split
+              Solved on 1st try with good pace
             </span>
           </div>
         </div>
@@ -73,10 +72,10 @@ export default function SplitTimeAutopsySection({ matrixData }) {
           </div>
           <div>
             <span className="block font-mono text-[11px] font-bold text-amber-800 dark:text-amber-300">
-              Slow Solve
+              Solved (Slow / Penalty)
             </span>
             <span className="block text-[9.5px] text-amber-700 dark:text-amber-400">
-              AC with penalty or pacing drag
+              Solved with wrong tries or extra time
             </span>
           </div>
         </div>
@@ -88,10 +87,10 @@ export default function SplitTimeAutopsySection({ matrixData }) {
           </div>
           <div>
             <span className="block font-mono text-[11px] font-bold text-rose-800 dark:text-rose-300">
-              Hard Reject / Brick Wall
+              Unsolved (Wrong Tries)
             </span>
             <span className="block text-[9.5px] text-rose-700 dark:text-rose-400">
-              Attempted but TLE/WA/RTE
+              Attempted but ran out of time or failed
             </span>
           </div>
         </div>
@@ -102,10 +101,10 @@ export default function SplitTimeAutopsySection({ matrixData }) {
           </div>
           <div>
             <span className="block font-mono text-[11px] font-bold text-neutral-700 dark:text-neutral-300">
-              Untouched / Starved
+              Not Attempted
             </span>
             <span className="block text-[9.5px] text-neutral-500 dark:text-neutral-400">
-              Clock expired on earlier Qs
+              Ran out of time before reaching it
             </span>
           </div>
         </div>
@@ -135,11 +134,11 @@ export default function SplitTimeAutopsySection({ matrixData }) {
                 </span>
               </div>
 
-              {/* Dead Zone Callout if user stalled */}
+              {/* Stalled callout if user had unused contest time */}
               {row.hasStall && (
                 <div className="flex items-center gap-1.5 rounded bg-amber-500/10 px-2 py-0.5 font-mono text-[11px] font-bold text-amber-700 dark:text-amber-400 border border-amber-500/20">
                   <Hourglass className="h-3 w-3" />
-                  <span>Dead Zone: {row.deadZoneMinutes}m clock starved after Q{row.problemsSolved}</span>
+                  <span>Stalled: {row.deadZoneMinutes}m remaining after Q{row.problemsSolved}</span>
                 </div>
               )}
             </div>
@@ -230,20 +229,20 @@ export default function SplitTimeAutopsySection({ matrixData }) {
                           </span>
                         </div>
                         <span className="text-[9.5px] text-neutral-400 dark:text-neutral-500 block">
-                          {cell.fails > 0 ? `${cell.fails} fails` : isClean ? '1st attempt' : 'unsolved'}
+                          {cell.fails > 0 ? `${cell.fails} wrong tries` : isClean ? '1st attempt' : 'unsolved'}
                         </span>
                       </div>
 
-                      {/* 1-Click Upsolve Link to LeetCode */}
+                      {/* 1-Click Practice Link to LeetCode */}
                       {cell.upsolveUrl ? (
                         <a
                           href={cell.upsolveUrl}
                           target="_blank"
                           rel="noreferrer"
-                          title="Open problem on LeetCode to upsolve"
+                          title="Open problem on LeetCode to practice"
                           className="flex items-center gap-1 rounded bg-neutral-100 hover:bg-neutral-200 px-2 py-1 text-[10px] font-mono font-bold text-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-300 transition-colors"
                         >
-                          <span>Upsolve</span>
+                          <span>Practice</span>
                           <ExternalLink className="h-2.5 w-2.5" />
                         </a>
                       ) : (

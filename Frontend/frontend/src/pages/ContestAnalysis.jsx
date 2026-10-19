@@ -30,6 +30,9 @@ import {
 import { useTheme } from '../hooks/useTheme.js'
 import Sidebar from '../components_dashboard/Sidebar.jsx'
 import DashHeader from '../components_dashboard/DashHeader.jsx'
+import BackToTop from '../components_dashboard/BackToTop.jsx'
+import ScrollProgress from '../components_dashboard/ScrollProgress.jsx'
+import ExpandableFAQ from '../components_contest/ExpandableFAQ.jsx'
 import {
   formatContestOverview,
   computeRankDistributionMatrix,
@@ -185,7 +188,7 @@ export default function ContestAnalysis() {
 
   // Fetch or sync contest data from backend API
   const loadContestData = useCallback(async (forced = false) => {
-    if (!username) return
+    if (!username || username === 'user') return
 
     try {
       if (forced) setIsSyncing(true)
@@ -216,14 +219,14 @@ export default function ContestAnalysis() {
           console.warn('Failed to cache contest data', e)
         }
         if (forced) {
-          setSyncNotice({ type: 'success', text: 'Contest telemetry refreshed' })
+          setSyncNotice({ type: 'success', text: 'Contest stats updated' })
           setTimeout(() => setSyncNotice(null), 3000)
         }
       }
     } catch (err) {
       console.error('[ContestAnalysis] Error loading contest data:', err)
       if (forced) {
-        setSyncNotice({ type: 'error', text: 'Failed to sync contest telemetry' })
+        setSyncNotice({ type: 'error', text: 'Failed to sync contest data' })
         setTimeout(() => setSyncNotice(null), 3000)
       }
     } finally {
@@ -313,7 +316,7 @@ export default function ContestAnalysis() {
                 LeetCode Profile Required
               </h3>
               <p className="mt-2 text-[12px] leading-relaxed text-neutral-500 dark:text-neutral-400">
-                Connect and verify your LeetCode profile on the Dashboard to unlock live contest telemetry, rating fluctuations, and leaderboard performance.
+                Connect and verify your LeetCode profile on the Dashboard to see your contest rating history, leaderboard rank, and solve stats.
               </p>
               <button
                 type="button"
@@ -343,13 +346,13 @@ export default function ContestAnalysis() {
                 <Activity className="h-7 w-7 stroke-[1.7]" />
               </div>
               <h3 className="text-[18px] font-extrabold tracking-tight text-neutral-900 dark:text-neutral-100">
-                No Rated Contest Telemetry Recorded
+                No Rated Contests Recorded
               </h3>
               <p className="mt-2 text-[13px] leading-relaxed text-neutral-500 dark:text-neutral-400">
                 Account <span className="font-mono font-semibold text-neutral-800 dark:text-neutral-200">@{username}</span> is connected, but no rated LeetCode Weekly or Biweekly contests have been completed yet.
               </p>
               <p className="mt-2 text-[12px] text-neutral-400 dark:text-neutral-500">
-                Join an upcoming contest on LeetCode. Once rating calculations finalize (usually Wednesday post-contest), your full rating trajectory and telemetry will appear here.
+                Join an upcoming contest on LeetCode. Once rating calculations finalize (usually Wednesday post-contest), your full rating history will appear here.
               </p>
 
               <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
@@ -360,7 +363,7 @@ export default function ContestAnalysis() {
                   className="flex items-center justify-center gap-2 rounded-lg bg-neutral-900 px-5 py-2.5 text-[12px] font-extrabold text-white transition hover:bg-neutral-800 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-white"
                 >
                   <RotateCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                  {isSyncing ? 'Syncing...' : 'Sync Contest Telemetry'}
+                  {isSyncing ? 'Syncing...' : 'Sync Contests'}
                 </button>
                 <a
                   href="https://leetcode.com/contest/"
@@ -390,10 +393,11 @@ export default function ContestAnalysis() {
       <Sidebar active={activeNav} setActive={setActiveNav} />
 
       {/* Main Content Area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden relative">
         <DashHeader user={user} stats={stats} />
+        <ScrollProgress containerId="main-content" />
 
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+        <div id="main-content" tabIndex="-1" className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
           {/* ─────────────────────────────────────────────────────────────
               1. TOP KPI TELEMETRY RIBBON
               ───────────────────────────────────────────────────────────── */}
@@ -407,7 +411,7 @@ export default function ContestAnalysis() {
                     className="text-[16px] font-extrabold tracking-tight text-neutral-900 dark:text-white leading-none"
                     style={{ color: isDarkMode ? '#ffffff' : undefined }}
                   >
-                    Contest Executive Telemetry
+                    Contest Overview
                   </h1>
                   <p className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400 mt-1">
                     Handle: @{username} • {overview.attendedCount} rated events evaluated
@@ -427,7 +431,7 @@ export default function ContestAnalysis() {
                   className="flex items-center gap-1.5 rounded-lg border border-neutral-900 bg-neutral-900 px-3.5 py-1.5 font-mono text-[11.5px] font-bold text-white shadow-xs transition hover:bg-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
                 >
                   <Activity className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>Deep Dive Autopsy ↗</span>
+                  <span>Contest Deep Dive ↗</span>
                 </button>
                 <button
                   type="button"
@@ -436,7 +440,7 @@ export default function ContestAnalysis() {
                   className="flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 font-mono text-[11px] font-bold text-neutral-700 shadow-2xs transition hover:bg-white hover:border-neutral-300 disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
                 >
                   <RotateCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
-                  {isSyncing ? 'Syncing...' : 'Sync Telemetry'}
+                  {isSyncing ? 'Syncing...' : 'Sync Contests'}
                 </button>
               </div>
             </div>
@@ -537,13 +541,13 @@ export default function ContestAnalysis() {
               2. THE DUAL PERFORMANCE MATRICES (2-Column Grid)
               ───────────────────────────────────────────────────────────── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* LEFT CARD: Rank Placement Distribution Matrix */}
+            {/* LEFT CARD: Contest Rank Breakdown */}
             <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs dark:border-neutral-800 dark:bg-neutral-900 transition-colors">
               <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-neutral-100 dark:border-neutral-800">
                 <div className="flex items-center gap-2">
                   <Trophy className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
                   <h2 className="text-[14px] font-bold text-neutral-900 dark:text-white">
-                    Leaderboard Placement Matrix
+                    Contest Rank Breakdown
                   </h2>
                 </div>
                 <span className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400">
@@ -594,17 +598,17 @@ export default function ContestAnalysis() {
               </div>
             </div>
 
-            {/* RIGHT CARD: Lethality & Solve Ratio Matrix */}
+            {/* RIGHT CARD: Questions Solved Per Contest */}
             <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs dark:border-neutral-800 dark:bg-neutral-900 transition-colors">
               <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-neutral-100 dark:border-neutral-800">
                 <div className="flex items-center gap-2">
                   <Target className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
                   <h2 className="text-[14px] font-bold text-neutral-900 dark:text-white">
-                    Problem Solving Lethality Matrix
+                    Questions Solved Per Contest
                   </h2>
                 </div>
                 <span className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400">
-                  Q1–Q4 Solve Ratios
+                  4/4 to 1/4 Solves
                 </span>
               </div>
 
@@ -670,7 +674,7 @@ export default function ContestAnalysis() {
           </div>
 
           {/* ─────────────────────────────────────────────────────────────
-              3. LEETCODE-STYLE RATING MOUNTAIN CHART (Full-Width Card)
+              3. RATING HISTORY CHART (Full-Width Card)
               ───────────────────────────────────────────────────────────── */}
           <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs dark:border-neutral-800 dark:bg-neutral-900 transition-colors">
             {/* Chart Header */}
@@ -679,11 +683,11 @@ export default function ContestAnalysis() {
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                   <h2 className="text-[14px] font-bold text-neutral-900 dark:text-white">
-                    Rating Trajectory Mountain
+                    Rating History
                   </h2>
                 </div>
                 <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
-                  Chronological fluctuation curve across all {mountainData.length} attended contests
+                  Your rating changes across all {mountainData.length} attended contests
                 </p>
               </div>
 
@@ -803,7 +807,15 @@ export default function ContestAnalysis() {
               </ResponsiveContainer>
             </div>
           </div>
+
+          {/* ─────────────────────────────────────────────────────────────
+              5. FREQUENTLY ASKED QUESTIONS (FAQ)
+              ───────────────────────────────────────────────────────────── */}
+          <ExpandableFAQ />
         </div>
+
+        {/* Floating Back to Top Button */}
+        <BackToTop scrollContainerId="main-content" />
       </div>
     </div>
   )

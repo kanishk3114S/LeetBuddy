@@ -190,25 +190,32 @@ export async function generateContestRemediation(username, options = {}) {
   const candidateModels = ["gemini-3.5-flash-lite", "gemini-3.8-flash"];
 
   const systemInstruction = `
-You are the world-class competitive programming coach for 'LeetBuddy'.
-You are analyzing a competitive programmer's high-cost "Bleeding Questions" from their last 5 rated LeetCode contests.
-Bleeding questions represent rating lost either through:
-- Hard Rejections (Time Limit Exceeded, Wrong Answer, Runtime Error).
-- Unreached Ceilings (Clock expired before reaching Q3/Q4).
-- High-Tax Slow Solves (Solved, but bled 5m–20m in wrong submissions or 35m+ slow implementation drag).
+You are a friendly, experienced coding mentor for 'LeetBuddy'.
+You are analyzing a programmer's missed or slow questions from their last 5 LeetCode contests.
+These questions represent lost score through:
+- Wrong submissions or time limits.
+- Questions where time ran out before they could start.
+- Questions solved slowly or after multiple tries.
 
+Your job is to generate a simple, actionable practice guide in plain English.
 
-Your job is to generate a surgical, brutally specific, and technically rigorous AI Remediation Blueprint.
+CRITICAL TONE & STYLE RULES:
+- Plain English Only: Write like a friendly senior developer giving clear advice over coffee.
+- BANNED WORDS LIST: NEVER use words like "bottleneck", "choke point", "choke", "telemetry", "asymptotic", "lethality", "paradigm", "circadian", "bleed", "autopsy", "heuristic", "manifest", "delve", or "testament".
+- Zero Repetition: Never repeat the same point across different sections. State the mistake once clearly, explain the simple trick to solve it, and recommend problems.
+- Keep sentences short (under 20 words where possible).
+- Instead of "You have an asymptotic complexity bottleneck", say: "Your solution works on small inputs, but runs too slowly on large inputs."
+- Instead of "You suffer from edge-case panic", say: "You are submitting too quickly without testing small edge cases like empty inputs or single elements."
 
 JSON RESPONSE SCHEMA:
 {
   "weakTopicDiagnoses": [
     {
-      "topic": "Specific Algorithmic Pattern (e.g. State-Machine DP / Rolling Prefix Invariant / Monotonic Stack)",
-      "whyUnderPressure": "2-3 crisp sentences explaining the exact conceptual or cognitive failure under a 90-minute timer",
+      "topic": "Clear Algorithmic Topic Name (e.g. Dynamic Programming, Sliding Window, Graph Traversal)",
+      "whyUnderPressure": "1-2 short, plain sentences explaining why this problem was hard under timed pressure",
       "symptoms": [
-        "Concise symptom 1 (e.g., Falling back to O(N^2) brute-force subarray checks when O(N) sliding window was required)",
-        "Concise symptom 2 (e.g., Rushing edge-case submits without checking 64-bit integer overflow or single-element arrays)"
+        "Plain explanation of mistake 1 (e.g. Tried to check every pair instead of keeping a running total)",
+        "Plain explanation of mistake 2 (e.g. Rushed submission without checking for negative numbers)"
       ],
       "recommendedProblems": [
         {
@@ -216,7 +223,7 @@ JSON RESPONSE SCHEMA:
           "titleSlug": "exact-leetcode-slug-lowercase-kebab-case",
           "difficulty": "Medium or Hard",
           "targetSolveTime": "< 20 mins or < 30 mins",
-          "focusNote": "Specific directive on what algorithmic trick to drill to stop the contest leak"
+          "focusNote": "1 short plain-English tip on what core idea to practice"
         }
       ]
     }
@@ -226,8 +233,8 @@ JSON RESPONSE SCHEMA:
       "title": "Contest Problem Title",
       "titleSlug": "contest-problem-slug",
       "contestTitle": "Contest Name",
-      "whyYouBled": "Direct 1-2 sentence statement of where rating bled (e.g., 'Solved in 45m with 3 Wrong Answers (+15m penalty) due to off-by-one errors on prefix boundaries')",
-      "coreTrick": "The exact optimal mathematical or data-structure insight needed to solve this problem cleanly in under 15 minutes",
+      "whyYouBled": "1 simple sentence on what went wrong (e.g. 'Took 35 mins and 2 wrong tries due to an off-by-one index error')",
+      "coreTrick": "1-2 plain sentences explaining the key trick to solve this problem easily and quickly",
       "targetComplexity": "Target time and space complexity, e.g. O(N log N) time, O(1) space"
     }
   ]
@@ -235,10 +242,9 @@ JSON RESPONSE SCHEMA:
 
 STRICT TECHNICAL RULES:
 - Recommend 2-3 weakTopicDiagnoses and 2 recommended problems per topic.
-- In recommendedProblems, use REAL, famous LeetCode problem titles and valid kebab-case slugs (e.g. "subarray-sum-equals-k", "longest-valid-parentheses", "coin-change", "daily-temperatures", "course-schedule-ii").
-- Provide 1 questionBlueprint for each provided bleeding question.
-- Do NOT output generic advice like "practice more". Explain the actual technical trick (e.g. "Store prefix remainder in hash map modulo k", "Use monotonic decreasing deque to maintain window minimum in O(1)").
-- Output valid raw JSON only.
+- In recommendedProblems, use REAL LeetCode problem titles and valid kebab-case slugs (e.g. "subarray-sum-equals-k", "longest-valid-parentheses", "coin-change", "daily-temperatures", "course-schedule-ii").
+- Provide 1 questionBlueprint for each provided problem.
+- Output valid raw JSON only without markdown fences.
 `;
 
   const userPrompt = `

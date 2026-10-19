@@ -31,7 +31,7 @@ export default function PanicTaxSection({ panicData }) {
         className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900"
       >
         <p className="text-sm font-mono text-neutral-500">
-          No attended contest telemetry available for Panic Tax analysis.
+          No attended contest data available for penalty analysis.
         </p>
       </div>
     )
@@ -44,20 +44,20 @@ export default function PanicTaxSection({ panicData }) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="font-mono text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest">
-              01 / TELEMETRY
+              01 / PENALTY ANALYSIS
             </span>
             <span className="text-neutral-300 dark:text-neutral-700">•</span>
             <span className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400">
-              5-Contest Rolling Window
+              Last 5 Contests
             </span>
           </div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-            The Panic-Submit Tax
+            Where You Lose Points & Time
           </h2>
           <p className="mt-1 text-xs sm:text-[13px] text-neutral-500 dark:text-neutral-400 max-w-3xl">
-            In competitive contests, every unverified wrong submission on a solved problem adds{' '}
+            In LeetCode contests, every wrong submission on a solved problem adds{' '}
             <strong className="text-neutral-800 dark:text-neutral-200">+5 minutes of penalty time</strong> to your
-            finish clock—plunging your global rank despite having written working code fast.
+            clock. Submitting too early without testing boundary cases pushes your rank down.
           </p>
         </div>
       </div>
@@ -79,7 +79,7 @@ export default function PanicTaxSection({ panicData }) {
                   {verdict.headline}
                 </span>
                 <span className="rounded bg-rose-200/60 dark:bg-rose-900/60 px-1.5 py-0.5 font-mono text-[10px] font-bold text-rose-800 dark:text-rose-200">
-                  ~{totals.totalEstimatedRankLoss.toLocaleString()} positions bled
+                  ~{totals.totalEstimatedRankLoss.toLocaleString()} positions lost
                 </span>
               </div>
               <p className="mt-1.5 text-xs sm:text-[13px] leading-relaxed text-rose-950 dark:text-rose-200">
@@ -87,7 +87,7 @@ export default function PanicTaxSection({ panicData }) {
               </p>
               {verdict.highlightContest && (
                 <p className="mt-2 text-xs font-mono text-rose-800 dark:text-rose-400 border-t border-rose-200/60 dark:border-rose-900/40 pt-2">
-                  ⚡ <strong>Worst Choke:</strong> {verdict.highlightContest}
+                  ⚡ <strong>Biggest Time Loss:</strong> {verdict.highlightContest}
                 </p>
               )}
             </div>
@@ -99,7 +99,7 @@ export default function PanicTaxSection({ panicData }) {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="rounded-xl border border-neutral-200 bg-white p-3.5 dark:border-neutral-800 dark:bg-neutral-900 shadow-2xs">
           <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-            Total Penalty Tax
+            Total Penalty Time
           </span>
           <div className="mt-1 flex items-baseline gap-1.5">
             <span className="font-mono text-2xl font-black text-rose-600 dark:text-rose-400 tabular-nums">
@@ -116,7 +116,7 @@ export default function PanicTaxSection({ panicData }) {
 
         <div className="rounded-xl border border-neutral-200 bg-white p-3.5 dark:border-neutral-800 dark:bg-neutral-900 shadow-2xs">
           <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-            Estimated Rank Bleed
+            Estimated Rank Loss
           </span>
           <div className="mt-1 flex items-baseline gap-1.5">
             <span className="font-mono text-2xl font-black text-rose-600 dark:text-rose-400 tabular-nums">
@@ -133,7 +133,7 @@ export default function PanicTaxSection({ panicData }) {
 
         <div className="rounded-xl border border-neutral-200 bg-white p-3.5 dark:border-neutral-800 dark:bg-neutral-900 shadow-2xs">
           <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-            Avg Penalty Per Event
+            Avg Penalty Per Contest
           </span>
           <div className="mt-1 flex items-baseline gap-1.5">
             <span className="font-mono text-2xl font-black text-neutral-900 dark:text-neutral-100 tabular-nums">
@@ -144,13 +144,13 @@ export default function PanicTaxSection({ panicData }) {
             </span>
           </div>
           <span className="text-[10.5px] text-neutral-500 dark:text-neutral-400 mt-1 block">
-            Average wrong-submit drag
+            Average penalty per contest
           </span>
         </div>
 
         <div className="rounded-xl border border-neutral-200 bg-white p-3.5 dark:border-neutral-800 dark:bg-neutral-900 shadow-2xs">
           <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-            Total Wrong Submissions
+            Wrong Attempts
           </span>
           <div className="mt-1 flex items-baseline gap-1.5">
             <span className="font-mono text-2xl font-black text-neutral-900 dark:text-neutral-100 tabular-nums">
@@ -161,20 +161,20 @@ export default function PanicTaxSection({ panicData }) {
             </span>
           </div>
           <span className="text-[10.5px] text-neutral-500 dark:text-neutral-400 mt-1 block">
-            {totals.totalAcceptedFails} penalized • {totals.totalFails - totals.totalAcceptedFails} on unaccepted
+            {totals.totalAcceptedFails} on solved problems (+5m each) • {totals.totalFails - totals.totalAcceptedFails} on unsolved
           </span>
         </div>
       </div>
 
-      {/* ── Pure Coding Time vs. Penalty Bleed Stacked Telemetry Bars ─── */}
+      {/* ── Pure Coding Time vs. Penalty Time Stacked Bars ─── */}
       <div className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-neutral-100 dark:border-neutral-800 gap-2">
           <div>
             <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-              Contest Clock Breakdown: Pure Solve vs. Penalty Time
+              Actual Coding Time vs. Penalty Time (+5m per wrong try)
             </h3>
             <p className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400">
-              Visualizing the exact proportion of each contest's finish time that was pure coding vs penalty addition
+              See how much of your finish clock was spent solving problems versus waiting out penalty time
             </p>
           </div>
 
@@ -186,7 +186,7 @@ export default function PanicTaxSection({ panicData }) {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-[2px] bg-rose-500" />
-              <span className="text-neutral-600 dark:text-neutral-300">Penalty Tax (+5m/fail)</span>
+              <span className="text-neutral-600 dark:text-neutral-300">Penalty Time (+5m/wrong try)</span>
             </div>
           </div>
         </div>
@@ -240,7 +240,7 @@ export default function PanicTaxSection({ panicData }) {
                   </div>
                 </div>
 
-                {/* Stacked Telemetry Bar */}
+                {/* Stacked Bars */}
                 <div className="relative h-6 w-full rounded-md bg-neutral-200/60 dark:bg-neutral-800 overflow-hidden flex shadow-inner">
                   {/* Pure Solve Segment */}
                   {pureWidth > 0 && (
@@ -251,18 +251,18 @@ export default function PanicTaxSection({ panicData }) {
                       className="h-full bg-emerald-500 dark:bg-emerald-600 flex items-center justify-start px-2 text-[10px] font-mono font-bold text-white whitespace-nowrap overflow-hidden"
                       title={`Pure Coding: ${item.pureSolveTimeFormatted} (${item.purePercentage}%)`}
                     >
-                      {item.purePercentage >= 15 ? `${item.pureSolveTimeFormatted} pure` : ''}
+                      {item.purePercentage >= 15 ? `${item.pureSolveTimeFormatted} coding` : ''}
                     </motion.div>
                   )}
 
-                  {/* Penalty Tax Segment */}
+                  {/* Penalty Segment */}
                   {penaltyWidth > 0 && (
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${penaltyWidth}%` }}
                       transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
                       className="h-full bg-rose-500 dark:bg-rose-600 flex items-center justify-center px-1.5 text-[10px] font-mono font-black text-white whitespace-nowrap overflow-hidden"
-                      title={`Penalty Tax: +${item.penaltyMinutes}m (${item.acceptedFails} fails)`}
+                      title={`Penalty: +${item.penaltyMinutes}m (${item.acceptedFails} wrong tries)`}
                     >
                       +{item.penaltyMinutes}m
                     </motion.div>
@@ -278,14 +278,14 @@ export default function PanicTaxSection({ panicData }) {
                     <span>•</span>
                     <span className={item.acceptedFails > 0 ? 'text-rose-600 dark:text-rose-400 font-semibold' : ''}>
                       {item.acceptedFails > 0
-                        ? `${item.acceptedFails} fails (+${item.penaltyMinutes}m tax)`
-                        : '0 penalty fails (clean clock)'}
+                        ? `${item.acceptedFails} wrong tries (+${item.penaltyMinutes}m penalty)`
+                        : '0 wrong tries (clean clock)'}
                     </span>
                   </div>
 
                   {item.acceptedFails > 0 && (
                     <span className="text-rose-600 dark:text-rose-400 font-bold">
-                      ~{item.estimatedRankLoss.toLocaleString()} rank positions bled
+                      ~{item.estimatedRankLoss.toLocaleString()} rank spots lost
                     </span>
                   )}
                 </div>

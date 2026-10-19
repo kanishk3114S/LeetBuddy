@@ -54,32 +54,32 @@ export default function CareerContestLedgerSection({ data }) {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-[10.5px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                06 / Career Telemetry
+                06 / CONTEST HISTORY
               </span>
               <span className="text-neutral-300 dark:text-neutral-700">•</span>
               <span className="font-mono text-[10.5px] font-medium text-neutral-500 dark:text-neutral-400">
-                {ledger.length} Rated Events Recorded
+                {ledger.length} Rated Contests
               </span>
             </div>
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-              Volatility, Horizon & Career Ledger
+              Ratings, Consistency & All Past Contests
             </h2>
           </div>
         </div>
       </div>
 
       <div className="p-5 sm:p-6 space-y-6">
-        {/* ── Next-Badge Horizon Bar ───────────────────────────────────── */}
+        {/* ── Next-Badge Goal Bar ───────────────────────────────────── */}
         {horizon && (
           <div className="rounded-xl border border-neutral-200/90 bg-neutral-50/50 p-4 sm:p-5 dark:border-neutral-800 dark:bg-neutral-900/80">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
               <div className="flex items-center gap-2">
                 <Award className="h-4 w-4 text-amber-500" />
                 <span className="font-mono text-xs font-bold text-neutral-900 dark:text-neutral-100">
-                  Next Milestone: {horizon.nextBadgeName} ({horizon.nextBadgeTarget})
+                  Next Badge Goal: {horizon.nextBadgeName} ({horizon.nextBadgeTarget})
                 </span>
                 <span className="rounded bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 font-mono text-[10px] font-bold text-amber-600 dark:text-amber-400">
-                  {horizon.ptsNeeded > 0 ? `${horizon.ptsNeeded} pts needed` : 'Milestone Reached!'}
+                  {horizon.ptsNeeded > 0 ? `${horizon.ptsNeeded} pts needed` : 'Badge Reached!'}
                 </span>
               </div>
 
@@ -91,7 +91,7 @@ export default function CareerContestLedgerSection({ data }) {
               )}
             </div>
 
-            {/* Horizon Progress Bar */}
+            {/* Progress Bar */}
             <div className="relative h-2 w-full rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden mb-2">
               <motion.div
                 className="h-full bg-emerald-500 rounded-full"
@@ -106,20 +106,20 @@ export default function CareerContestLedgerSection({ data }) {
                 Current: <strong className="text-neutral-900 dark:text-neutral-100">{horizon.currentRating}</strong> pts
               </span>
               <span>
-                Est. ~{horizon.estContestsNeeded} positive contests (at your avg +{horizon.avgPositiveGain} gain)
+                Est. ~{horizon.estContestsNeeded} winning contests (at your avg +{horizon.avgPositiveGain} gain)
               </span>
             </div>
           </div>
         )}
 
-        {/* ── Momentum & Volatility 4-Chip Strip ───────────────────────── */}
+        {/* ── Consistency & Momentum 4-Chip Strip ───────────────────────── */}
         {volatility && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {/* Chip 1: Upward Velocity */}
+            {/* Chip 1: Consistency */}
             <div className="rounded-xl border border-neutral-200/80 bg-white p-3.5 dark:border-neutral-800 dark:bg-neutral-900 shadow-2xs">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[10px] font-bold uppercase text-neutral-400">
-                  Upward Velocity
+                  Consistency
                 </span>
                 <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
               </div>
@@ -131,11 +131,11 @@ export default function CareerContestLedgerSection({ data }) {
               </span>
             </div>
 
-            {/* Chip 2: Streak Telemetry */}
+            {/* Chip 2: Streak */}
             <div className="rounded-xl border border-neutral-200/80 bg-white p-3.5 dark:border-neutral-800 dark:bg-neutral-900 shadow-2xs">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[10px] font-bold uppercase text-neutral-400">
-                  Gain Streak
+                  Current Win Streak
                 </span>
                 <Flame className="h-3.5 w-3.5 text-amber-500" />
               </div>
@@ -143,15 +143,15 @@ export default function CareerContestLedgerSection({ data }) {
                 {volatility.currentStreak} in a row
               </span>
               <span className="text-[10.5px] font-mono text-neutral-500">
-                All-time peak: {volatility.longestStreak} consecutive gains
+                All-time best: {volatility.longestStreak} consecutive gains
               </span>
             </div>
 
-            {/* Chip 3: Peak vs Tilt */}
+            {/* Chip 3: Best Gain / Biggest Drop */}
             <div className="rounded-xl border border-neutral-200/80 bg-white p-3.5 dark:border-neutral-800 dark:bg-neutral-900 shadow-2xs">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[10px] font-bold uppercase text-neutral-400">
-                  Peak vs. Worst Tilt
+                  Best Gain / Biggest Drop
                 </span>
                 <Activity className="h-3.5 w-3.5 text-indigo-500" />
               </div>
@@ -169,11 +169,11 @@ export default function CareerContestLedgerSection({ data }) {
               </span>
             </div>
 
-            {/* Chip 4: Volatility Classifier */}
+            {/* Chip 4: Consistency Classifier */}
             <div className="rounded-xl border border-neutral-200/80 bg-white p-3.5 dark:border-neutral-800 dark:bg-neutral-900 shadow-2xs">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[10px] font-bold uppercase text-neutral-400">
-                  Rating Volatility (σ)
+                  Rating Consistency
                 </span>
                 <span className="font-mono text-[10px] text-neutral-400">σ = {volatility.stdDev}</span>
               </div>
@@ -238,8 +238,8 @@ export default function CareerContestLedgerSection({ data }) {
                   <th className="px-4 py-2.5">Solved</th>
                   <th className="px-4 py-2.5">Finish Time</th>
                   <th className="px-4 py-2.5">Rank</th>
-                  <th className="px-4 py-2.5">Delta</th>
-                  <th className="px-4 py-2.5">Post Rating</th>
+                  <th className="px-4 py-2.5">Rating Change</th>
+                  <th className="px-4 py-2.5">Rating After</th>
                   <th className="px-4 py-2.5 text-right">Link</th>
                 </tr>
               </thead>

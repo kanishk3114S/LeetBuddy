@@ -1,6 +1,7 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useTheme } from './hooks/useTheme.js'
 import ThemeToggle from './components_dashboard/ThemeToggle.jsx'
+import CookieBanner from './components_dashboard/CookieBanner.jsx'
 import './App.css'
 
 function App() {
@@ -10,10 +11,29 @@ function App() {
   const goToAuth = () => navigate('/auth')
   const scrollToHowItWorks = () => document.querySelector('#how-it-works')?.scrollIntoView({ behavior: 'smooth' })
 
-  if (location.pathname !== '/') return <Outlet />
+  if (location.pathname !== '/') {
+    return (
+      <>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:border focus:border-neutral-300 focus:bg-white focus:px-4 focus:py-2 focus:text-xs focus:font-semibold focus:text-neutral-900 focus:shadow-lg dark:focus:border-neutral-700 dark:focus:bg-neutral-900 dark:focus:text-white"
+        >
+          Skip to content
+        </a>
+        <Outlet />
+        <CookieBanner />
+      </>
+    )
+  }
 
   return (
     <main className={isDarkMode ? 'dark-mode' : ''}>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:border focus:border-neutral-300 focus:bg-white focus:px-4 focus:py-2 focus:text-xs focus:font-semibold focus:text-neutral-900 focus:shadow-lg dark:focus:border-neutral-700 dark:focus:bg-neutral-900 dark:focus:text-white"
+      >
+        Skip to content
+      </a>
       <nav className="nav container" aria-label="Main navigation">
         <a className="brand" href="#top" aria-label="LeetBuddy home"><span className="brand-mark" aria-hidden="true"><span /><span /><span /></span><span>LeetBuddy</span></a>
         <div className="nav-links"><a href="#features">Features</a><a href="#how-it-works">How it works</a></div>
@@ -43,6 +63,7 @@ function App() {
       <section className="ai-section" id="ai-insight"><div className="container ai-layout"><div className="ai-copy"><p className="eyebrow"><span /> Personalized, not generic</p><h2>AI that helps you<br />get unstuck.</h2><p>LeetBuddy connects the dots in your activity and turns them into explanations that make your next practice session count.</p></div><div className="ai-panel"><div className="ai-question"><span className="sparkle">✦</span><p>Why are you struggling with DP?</p></div><div className="ai-points"><div><i>01</i><span><b>State definition</b><small>Your states are often incomplete or unclear.</small></span></div><div><i>02</i><span><b>Transitions</b><small>Recognizing how subproblems connect needs work.</small></span></div><div><i>03</i><span><b>Problem recognition</b><small>DP opportunities are easy to miss under pressure.</small></span></div></div><div className="recommendation"><span>LeetBuddy recommends</span><p>Learn 2D DP fundamentals <b>→</b> practice targeted problems</p></div></div></div></section>
       <section className="final-section container"><p className="eyebrow"><span /> Start with clarity</p><h2>Know what to solve next.</h2><p>Bring intention to every problem you practice.</p><button className="button button-dark" type="button" onClick={goToAuth}>Continue <span className="arrow">↗</span></button></section>
       <footer className="footer container"><a className="brand" href="#top"><span className="brand-mark" aria-hidden="true"><span /><span /><span /></span><span>LeetBuddy</span></a><span>Practice with purpose.</span><span>© 2026 LeetBuddy</span></footer>
+      <CookieBanner />
     </main>
   )
 }

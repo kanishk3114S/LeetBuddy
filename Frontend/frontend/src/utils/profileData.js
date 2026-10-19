@@ -90,7 +90,7 @@ export function normalizeProfileData(rawStats) {
     calendar = {}
   }
 
-  const username = rawStats.username || profileDoc.username || 'user'
+  const username = rawStats.username || profileDoc.username || ''
   const heroCard = rawStats.heroCard || profileDoc.heroCard || null
 
   return {

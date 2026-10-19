@@ -39,8 +39,10 @@ export async function verifyAccessToken(req, res, next) {
 
     // Check if the current route is in the public whitelist
     const isContestRoute = requestPath.startsWith("/api/v1/contests") || requestPath.startsWith("/api/contests");
+    const isWeaknessRoute = requestPath.startsWith("/api/v1/weakness") || requestPath.startsWith("/api/weakness");
     const isPublicRoute = ALLOW_PUBLIC_AUTH_ROUTES && (
         isContestRoute ||
+        isWeaknessRoute ||
         PUBLIC_ROUTES.some(
             route => route.method === requestMethod && route.path === requestPath
         )

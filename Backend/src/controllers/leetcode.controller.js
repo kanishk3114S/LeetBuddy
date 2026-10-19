@@ -485,15 +485,23 @@ export const getOrGenerateHeroCard = async (req, res) => {
  */
 export const refreshLeetCodeStats = async (req, res) => {
     try {
-        const userId = req.user?.id;
-        let username = req.body?.username;
+        const userId = req.user?.id || req.user?._id;
+        let username = null;
 
-        // If authenticated, get username from user document if not explicitly passed
+        // If authenticated, the SOLE source of truth is user.leetcode.username in MongoDB
         if (userId) {
             const user = await userModel.findById(userId);
-            if (!username && user?.leetcode?.username) {
-                username = user.leetcode.username;
+            if (!user) {
+                return res.status(404).json({ error: "User account not found" });
             }
+
+            if (!user.leetcode?.username || !user.leetcode?.isVerified) {
+                return res.status(400).json({
+                    error: "No verified LeetCode profile linked to this account. Please connect and verify your LeetCode profile first."
+                });
+            }
+
+            username = user.leetcode.username;
 
             // Cooldown check (10 seconds) to prevent LeetCode rate limits / IP abuse
             const lastSynced = user?.leetcode?.lastSynced;
@@ -507,11 +515,16 @@ export const refreshLeetCodeStats = async (req, res) => {
                     });
                 }
             }
+        } else {
+            // Unauthenticated / public preview: only allow if an explicit non-placeholder handle was passed
+            username = req.body?.username;
         }
 
-        if (!username) {
-            return res.status(400).json({ error: "LeetCode username is required to refresh stats" });
+        if (!username || typeof username !== "string" || username.trim().toLowerCase() === "user" || username.trim().toLowerCase() === "developer") {
+            return res.status(400).json({ error: "A valid, verified LeetCode handle is required to refresh stats" });
         }
+
+        username = username.trim();
 
         // Fetch fresh stats from LeetCode GraphQL
         const statsQuery = `
@@ -762,15 +775,18 @@ export const getMyProfile = async (req, res) => {
             return res.status(404).json({ error: "User not found" });
         }
 
+        const isVerified = Boolean(user.leetcode?.isVerified);
+        const leetcodeHandle = user.leetcode?.username || null;
+
         let profileData = null;
-        if (mongoose.connection.readyState === 1) {
+        if (isVerified && leetcodeHandle && mongoose.connection.readyState === 1) {
             profileData = await profileDataModel.findOne({ userId });
         }
 
         return res.status(200).json({
             user,
-            username: user.leetcode?.username || null,
-            isVerified: Boolean(user.leetcode?.isVerified),
+            username: leetcodeHandle,
+            isVerified,
             profile: profileData
         });
     } catch (error) {

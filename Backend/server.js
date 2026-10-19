@@ -5,6 +5,8 @@ connectDB().catch(err => {
     console.warn("[MongoDB] Initial connection error:", err.message);
 });
 
-app.listen(3000 , ()=>{
-    console.log("server is listening to the PORT 3000")
-})
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`[LeetBuddy Backend] Server is listening on PORT ${PORT}`);
+});

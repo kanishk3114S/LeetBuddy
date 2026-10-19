@@ -51,15 +51,15 @@ export default function RootCauseMistakeSection({ telemetry }) {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-[10.5px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
-                03 / Telemetry Engine
+                03 / MISTAKE BREAKDOWN
               </span>
               <span className="text-neutral-300 dark:text-neutral-700">•</span>
               <span className="font-mono text-[10.5px] font-medium text-neutral-500 dark:text-neutral-400">
-                {totalMistakes} Suboptimal Events Detected
+                {totalMistakes} Mistakes & Slow Solves
               </span>
             </div>
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-              Root-Cause Mistake Categorizer
+              Where You Lose Points & Time
             </h2>
           </div>
         </div>
@@ -67,13 +67,13 @@ export default function RootCauseMistakeSection({ telemetry }) {
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-1 font-mono text-[11px] font-semibold text-neutral-700 dark:border-neutral-800 dark:bg-neutral-800/60 dark:text-neutral-300">
             <Layers className="h-3.5 w-3.5 text-neutral-400" />
-            Last 5 Contests Evaluated
+            Last 5 Contests
           </span>
         </div>
       </div>
 
       <div className="p-5 sm:p-6 space-y-6">
-        {/* ── Primary Choke Slot Banner ─────────────────────────────────── */}
+        {/* ── Primary Time & Point Loss Banner ─────────────────────────────────── */}
         {primaryChokeSlot && primaryChokeSlot.slot !== 'None' ? (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -88,7 +88,7 @@ export default function RootCauseMistakeSection({ telemetry }) {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-[10px] font-extrabold uppercase tracking-wider text-rose-700 dark:text-rose-300 bg-rose-200/60 dark:bg-rose-900/60 px-2 py-0.5 rounded-md">
-                      Primary Rating Killer
+                      Biggest Time & Point Loss
                     </span>
                     <span className="font-mono text-xs font-semibold text-neutral-500 dark:text-neutral-400">
                       {primaryChokeSlot.label}
@@ -131,7 +131,7 @@ export default function RootCauseMistakeSection({ telemetry }) {
                         {totalSlotIncidents}
                       </span>
                       <span className="text-[9px] font-mono text-neutral-400">
-                        {totalSlotIncidents === 1 ? 'event' : 'events'}
+                        {totalSlotIncidents === 1 ? 'mistake' : 'mistakes'}
                       </span>
                     </div>
                   )
@@ -142,22 +142,22 @@ export default function RootCauseMistakeSection({ telemetry }) {
         ) : (
           <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/50 p-4 dark:border-emerald-900/30 dark:bg-emerald-950/20">
             <h3 className="text-sm font-bold text-emerald-800 dark:text-emerald-300">
-              Clean Execution Across All Slots
+              Clean Execution Across All Questions
             </h3>
             <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400">
-              No penalty concentrations or severe diagnostic bottlenecks detected across evaluated contests.
+              No major time loss or wrong submissions detected across evaluated contests.
             </p>
           </div>
         )}
 
-        {/* ── 4-Card Failure & Drag Breakdown Strip ─────────────────────── */}
+        {/* ── 4-Card Failure Breakdown Strip ─────────────────────── */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-              Diagnostic Failure Buckets (Share of Mistakes)
+              Common Mistakes (Share of Total)
             </span>
             <span className="font-mono text-[11px] text-neutral-400">
-              Total Weight: {totalMistakes} incident{totalMistakes !== 1 ? 's' : ''}
+              Total: {totalMistakes} mistake{totalMistakes !== 1 ? 's' : ''}
             </span>
           </div>
 
@@ -188,7 +188,7 @@ export default function RootCauseMistakeSection({ telemetry }) {
                       <div className="flex items-center gap-1.5">
                         {isDominant && (
                           <span className="rounded-md border border-neutral-300 bg-neutral-900 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-white dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
-                            Dominant
+                            Most Common
                           </span>
                         )}
                         <span
@@ -213,7 +213,7 @@ export default function RootCauseMistakeSection({ telemetry }) {
                       <span className="font-mono text-xl font-extrabold text-neutral-900 dark:text-neutral-100">
                         {bucket.count}
                         <span className="ml-1 text-[11px] font-normal text-neutral-400">
-                          {bucket.count === 1 ? 'fail' : 'fails'}
+                          {bucket.count === 1 ? 'time' : 'times'}
                         </span>
                       </span>
                       <span className={`font-mono text-sm font-bold ${bucket.accentText}`}>
@@ -242,7 +242,7 @@ export default function RootCauseMistakeSection({ telemetry }) {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">
-                Question Slot Diagnostic Spectrum
+                Mistakes by Question
               </span>
             </div>
             <span className="font-mono text-[10.5px] text-neutral-400">
@@ -270,7 +270,7 @@ export default function RootCauseMistakeSection({ telemetry }) {
                           : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                       }`}
                     >
-                      {totalSlotEvents > 0 ? `${totalSlotEvents} Drag Events` : 'Clean Pacing'}
+                      {totalSlotEvents > 0 ? `${totalSlotEvents} Mistakes / Slow` : 'Clean Solves'}
                     </span>
                   </div>
 
@@ -294,14 +294,14 @@ export default function RootCauseMistakeSection({ telemetry }) {
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-neutral-600 dark:text-neutral-400">
-                      <span>Slow Solves (&gt; bench):</span>
+                      <span>Slow Solves:</span>
                       <span className={s.slow > 0 ? 'font-bold text-blue-500' : 'text-neutral-400'}>
                         {s.slow}
                       </span>
                     </div>
                     {s.unreached > 0 && (
                       <div className="flex items-center justify-between text-neutral-500 pt-1 border-t border-neutral-100 dark:border-neutral-800/60">
-                        <span className="text-[10px]">Unreached (Starved):</span>
+                        <span className="text-[10px]">Ran Out of Time:</span>
                         <span className="font-bold text-neutral-500">{s.unreached}x</span>
                       </div>
                     )}

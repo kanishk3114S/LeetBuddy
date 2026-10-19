@@ -125,7 +125,7 @@ query getRecentSubmissions($username: String!, $limit: Int!) {
  * @returns {Promise<Object>} Normalized contest payload ready for DB persistence
  */
 export async function fetchLeetCodeContestData(username) {
-  if (!username || typeof username !== "string") {
+  if (!username || typeof username !== "string" || username.trim().toLowerCase() === "user" || username.trim().toLowerCase() === "developer") {
     throw new Error("Valid LeetCode username is required");
   }
 
@@ -418,8 +418,8 @@ export async function fetchLeetCodeContestData(username) {
  * @returns {Promise<Object>} Persisted Contest document
  */
 export async function syncContestData(username, userId = null) {
-  if (!username) {
-    throw new Error("LeetCode username is required to sync contest data");
+  if (!username || typeof username !== "string" || username.trim().toLowerCase() === "user" || username.trim().toLowerCase() === "developer") {
+    throw new Error("Valid LeetCode username is required to sync contest data");
   }
 
   const cleanUsername = username.toLowerCase().trim();
@@ -483,7 +483,9 @@ export async function syncContestData(username, userId = null) {
  * @returns {Promise<Object>} Contest document
  */
 export async function getContestData(username, userId = null) {
-  if (!username) return null;
+  if (!username || typeof username !== "string" || username.trim().toLowerCase() === "user" || username.trim().toLowerCase() === "developer") {
+    return null;
+  }
 
   const cleanUsername = username.toLowerCase().trim();
 
