@@ -702,7 +702,7 @@ export default function StatsView({ stats, onStatsUpdate }) {
 
                 <div className="pt-3 border-t border-neutral-200/70 dark:border-neutral-800/80 flex items-center justify-between gap-2">
                   <div className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
-                    <span className="font-bold text-neutral-900 dark:text-neutral-200">{topic.volume}</span> solved • <span className="font-bold text-neutral-900 dark:text-neutral-200">{topic.accuracy}%</span> acc
+                    <span className="font-bold text-neutral-900 dark:text-neutral-200">{topic.volume}</span> solved • <span className="font-bold text-neutral-900 dark:text-neutral-200">{topic.accuracy}%</span> acc • <span className="font-bold text-rose-500">{topic.failureRate}%</span> fail
                   </div>
                   <a
                     href={topic.practiceUrl}

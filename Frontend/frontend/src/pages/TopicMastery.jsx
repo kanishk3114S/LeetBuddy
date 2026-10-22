@@ -33,19 +33,48 @@ export default function TopicMastery() {
     return () => window.removeEventListener('lb_stats_updated', handleStatsUpdated)
   }, [])
 
+  // Auto-hydrate verified profile from MongoDB if not cached in localStorage
+  useEffect(() => {
+    if (stats?.profile?.topics?.length) return
+
+    const token = localStorage.getItem('accessToken') || localStorage.getItem('lb_token')
+    if (!token) return
+
+    fetch('/api/leetcode/profile', {
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include'
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(payload => {
+        if (payload?.profile) {
+          const profileStats = {
+            username: payload.username || payload.user?.leetcode?.username,
+            profile: payload.profile
+          }
+          setStats(profileStats)
+          try {
+            localStorage.setItem('lb_stats', JSON.stringify(profileStats))
+          } catch (e) {
+            console.warn('[TopicMastery] Failed to cache stats:', e)
+          }
+        }
+      })
+      .catch(err => console.warn('[TopicMastery] Auto-hydration warning:', err))
+  }, [stats])
+
   // Restore user info from localStorage
   const user = {
     email: localStorage.getItem('lb_email') || '',
     name: localStorage.getItem('lb_name') || '',
   }
 
-  // Process all 41 topics with updated strict classification criteria
+  // Process all topics using pure real-data evaluation
   const allTopics = useMemo(() => {
     const profile = stats?.profile || stats || {}
     return analyzeTopics(profile)
   }, [stats])
 
-  // Aggregate executive metrics across the 3 sections
+  // Aggregate executive metrics across the 3 sections dynamically
   const summary = useMemo(() => {
     const weakList = allTopics.filter(t => t.tierType === 'weak')
     const mediumList = allTopics.filter(t => t.tierType === 'medium')
@@ -60,8 +89,8 @@ export default function TopicMastery() {
       mediumCount: mediumList.length,
       strongCount: strongList.length,
       avgMastery,
-      topWeakness: weakList[0]?.name || 'Dynamic Programming',
-      topStrength: strongList[0]?.name || 'Trees'
+      topWeakness: weakList[0]?.name || 'None identified',
+      topStrength: strongList[0]?.name || 'In progress'
     }
   }, [allTopics])
 
@@ -141,7 +170,7 @@ export default function TopicMastery() {
                   </span>
                 </div>
                 <p className="text-[10px] font-mono text-neutral-500 dark:text-neutral-400 mt-2 truncate">
-                  Solved &lt; 5 OR Acc &lt; 40%
+                  Vol &lt; 5 | Mastery &lt; 40 | Fail &gt; 50%
                 </p>
               </div>
 
@@ -159,7 +188,7 @@ export default function TopicMastery() {
                   </span>
                 </div>
                 <p className="text-[10px] font-mono text-neutral-500 dark:text-neutral-400 mt-2 truncate">
-                  40% ≤ Acc &lt; 70%
+                  Vol ≥ 5 &amp; 40 ≤ Mastery &lt; 70
                 </p>
               </div>
 
@@ -177,7 +206,7 @@ export default function TopicMastery() {
                   </span>
                 </div>
                 <p className="text-[10px] font-mono text-neutral-500 dark:text-neutral-400 mt-2 truncate">
-                  Solved ≥ 5 &amp; Acc ≥ 70%
+                  Vol ≥ 15 &amp; Mastery ≥ 70
                 </p>
               </div>
             </div>

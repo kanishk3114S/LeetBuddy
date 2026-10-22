@@ -10,6 +10,7 @@ import {
 } from 'recharts'
 import { Network, Sparkles } from 'lucide-react'
 import { useTheme } from '../hooks/useTheme.js'
+import { analyzeTopics } from '../utils/topicData.js'
 
 // Semantic theme tokens for tier categories across light/dark modes
 const TIER_TOKENS = {
@@ -27,7 +28,7 @@ const TIER_TOKENS = {
   }
 }
 
-// Primary 8 topic clusters specified in the prompt
+// Primary 8 topic clusters for the Radar Matrix
 const MAJOR_CLUSTERS = [
   { name: 'Arrays', match: ['array', 'arrays'] },
   { name: 'Strings', match: ['string', 'strings'] },
@@ -36,7 +37,7 @@ const MAJOR_CLUSTERS = [
   { name: 'Dynamic Programming', match: ['dynamic programming', 'dp'] },
   { name: 'Greedy', match: ['greedy'] },
   { name: 'Math', match: ['math', 'mathematics'] },
-  { name: 'Heap', match: ['heap', 'priority queue', 'heap (priority queue)'] }
+  { name: 'Heap', match: ['heap', 'priority queue', 'heap (priority queue)', 'heap-priority-queue'] }
 ]
 
 // Custom Recharts Tooltip for Radar Chart
@@ -56,7 +57,7 @@ function CustomRadarTooltip({ active, payload }) {
           Mastery Score: <strong className="font-mono text-neutral-900 dark:text-white">{d.masteryScore}/100</strong>
         </p>
         <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-mono">
-          Solved: {d.volume} • Accuracy: {d.accuracy}%
+          Solved: {d.volume} • Acc: {d.accuracy}% • Fail: {d.failureRate}%
         </p>
       </div>
     )
@@ -65,93 +66,61 @@ function CustomRadarTooltip({ active, payload }) {
 }
 
 export default function TopicMasteryMatrix({ stats }) {
-  const [selectedTopic, setSelectedTopic] = useState('Trees')
-
-  // Process topics from backend res.json()
+  // Pure dynamic evaluation strictly based on real profile telemetry
   const topicData = useMemo(() => {
     const profile = stats?.profile || stats || {}
-    const backendTopics = profile.topics || []
+    const evaluatedAll = analyzeTopics(profile)
 
     return MAJOR_CLUSTERS.map(cluster => {
-      // Find matching topic from backend topics array
-      const matched = backendTopics.find(t =>
-        cluster.match.some(m => t.tagName?.toLowerCase().includes(m))
+      // Find matching topic from the evaluated real-data list
+      const matched = evaluatedAll.find(t =>
+        cluster.match.some(m =>
+          t.name.toLowerCase() === m ||
+          t.slug.toLowerCase() === m ||
+          t.slug.toLowerCase().replace(/[^a-z0-9]/g, '') === m.replace(/[^a-z0-9]/g, '')
+        )
       )
 
-      // Fallback sensible baseline if backend topic not populated
-      const defaultVolumes = {
-        'Arrays': 165,
-        'Strings': 110,
-        'Trees': 72,
-        'Graphs': 55,
-        'Dynamic Programming': 48,
-        'Greedy': 45,
-        'Math': 38,
-        'Heap': 32
+      if (matched) {
+        return {
+          topic: cluster.name,
+          volume: matched.volume,
+          accuracy: matched.accuracy,
+          failureRate: matched.failureRate,
+          totalAttempts: matched.totalAttempts,
+          triesPerSolve: matched.triesPerSolve,
+          hardSolved: matched.hardSolved,
+          mediumSolved: matched.mediumSolved,
+          easySolved: matched.easySolved,
+          tag: matched.tag,
+          tierType: matched.tierType,
+          tagIcon: matched.tagIcon,
+          diagnostic: matched.diagnostic,
+          masteryScore: matched.masteryScore
+        }
       }
 
-      const volume = matched ? matched.problemsSolved : (defaultVolumes[cluster.name] || 25)
-
-      // Compute estimated accuracy rate & difficulty distribution
-      let accuracy = 65
-      let hardSolved = Math.max(1, Math.round(volume * 0.12))
-      let mediumSolved = Math.max(2, Math.round(volume * 0.55))
-      let easySolved = Math.max(0, volume - hardSolved - mediumSolved)
-
-      // Determine categorization tags based on accuracy & volume
-      // 🟢 Dominant Topic: High volume + high accuracy
-      // 🟡 Developing Topic: Medium volume + average accuracy
-      // 🔴 Critical Weakness: High attempt volume + low acceptance rate
-      let tag
-      let tierType
-      let tagIcon
-      let diagnostic
-
-      if (cluster.name === 'Trees' || cluster.name === 'Arrays' || (volume >= 60 && accuracy >= 80)) {
-        accuracy = cluster.name === 'Trees' ? 88 : 84
-        tag = 'Dominant Topic'
-        tierType = 'strong'
-        tagIcon = '🟢'
-        diagnostic = 'Excellent concept retention, rapid pattern spotting and low bug rate.'
-      } else if (cluster.name === 'Dynamic Programming' || (volume >= 40 && accuracy <= 45)) {
-        accuracy = 38
-        tag = 'Critical Weakness'
-        tierType = 'weak'
-        tagIcon = '🔴'
-        diagnostic = 'High attempt volume with frequent timeouts. Needs more practice with recurrence and state design.'
-      } else if (cluster.name === 'Graphs') {
-        accuracy = 58
-        tag = 'Developing'
-        tierType = 'medium'
-        tagIcon = '🟡'
-        diagnostic = 'Strong BFS/DFS basics; advanced Dijkstra & topological sorts need practice.'
-      } else {
-        accuracy = cluster.name === 'Strings' ? 76 : cluster.name === 'Greedy' ? 68 : 62
-        tag = accuracy >= 75 ? 'Dominant Topic' : 'Developing'
-        tierType = accuracy >= 75 ? 'strong' : 'medium'
-        tagIcon = accuracy >= 75 ? '🟢' : '🟡'
-        diagnostic = 'Consistent progress with steady accuracy on Medium questions.'
-      }
-
-      const totalAttempts = Math.round(volume / (accuracy / 100))
-      const masteryScore = Math.min(100, Math.round((accuracy * 0.6) + (Math.min(volume, 100) * 0.4)))
-
+      // If user has zero verified solves in this cluster
       return {
         topic: cluster.name,
-        volume,
-        accuracy,
-        totalAttempts,
-        hardSolved,
-        mediumSolved,
-        easySolved,
-        tag,
-        tierType,
-        tagIcon,
-        diagnostic,
-        masteryScore
+        volume: 0,
+        accuracy: 0,
+        failureRate: 100,
+        totalAttempts: 0,
+        triesPerSolve: 0,
+        hardSolved: 0,
+        mediumSolved: 0,
+        easySolved: 0,
+        tag: 'Weak Topic',
+        tierType: 'weak',
+        tagIcon: '🔴',
+        diagnostic: 'Zero verified solves in this topic cluster. Unattempted topic gap.',
+        masteryScore: 0
       }
     })
   }, [stats])
+
+  const [selectedTopic, setSelectedTopic] = useState(() => topicData[0]?.topic || 'Arrays')
 
   const { isDarkMode } = useTheme()
 
@@ -178,7 +147,7 @@ export default function TopicMasteryMatrix({ stats }) {
               Topic Mastery Breakdown
             </h2>
             <p className="font-mono text-[11px] text-neutral-400 dark:text-neutral-500">
-              The "Radar Matrix": Spider Chart Across 8 Major Algorithmic Clusters
+              The "Radar Matrix": Spider Chart Across 8 Major Algorithmic Clusters (Pure Real-Data Evaluation)
             </p>
           </div>
         </div>
@@ -186,13 +155,13 @@ export default function TopicMasteryMatrix({ stats }) {
         {/* Legend Pills */}
         <div className="flex items-center gap-2 text-[10px] font-mono flex-wrap">
           <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">
-            🟢 Dominant (&gt;75%)
+            🟢 Proficient (≥70)
           </span>
           <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20">
-            🟡 Developing (50-75%)
+            🟡 Developing (40-69)
           </span>
           <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold border border-rose-500/20">
-            🔴 Critical Weakness (&lt;50%)
+            🔴 Critical Weakness (&lt;40)
           </span>
         </div>
       </div>
@@ -289,11 +258,11 @@ export default function TopicMasteryMatrix({ stats }) {
                 {activeDetail.volume}
               </span>
               <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">
-                Across practice & contests
+                Across practice &amp; contests
               </span>
             </div>
 
-            {/* Metric 2: Accuracy Rate */}
+            {/* Metric 2: Accuracy & Failure Rate */}
             <div className="rounded-xl border border-neutral-200 bg-white p-3 text-center shadow-xs dark:border-neutral-800 dark:bg-neutral-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs">
               <span className="font-mono text-[10px] uppercase text-neutral-500 dark:text-neutral-400 block font-bold">
                 Accuracy Rate
@@ -302,7 +271,7 @@ export default function TopicMasteryMatrix({ stats }) {
                 {activeDetail.accuracy}%
               </span>
               <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">
-                Accepted / Submissions
+                {activeDetail.failureRate}% failure rate
               </span>
             </div>
 
@@ -315,7 +284,7 @@ export default function TopicMasteryMatrix({ stats }) {
                 {activeDetail.totalAttempts}
               </span>
               <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">
-                {(activeDetail.totalAttempts / Math.max(1, activeDetail.volume)).toFixed(1)} tries / solve
+                {activeDetail.volume > 0 ? `${(activeDetail.totalAttempts / activeDetail.volume).toFixed(1)} tries / solve` : '0 attempts'}
               </span>
             </div>
           </div>

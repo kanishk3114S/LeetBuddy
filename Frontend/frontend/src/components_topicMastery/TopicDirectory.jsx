@@ -109,7 +109,7 @@ function TopicCardItem({ topic }) {
           </div>
         )}
 
-        {/* Quantitative Stats Row: Solved, Attempts, Velocity */}
+        {/* Quantitative Stats Row: Solved, Failure Rate, Velocity */}
         <div className="grid grid-cols-3 gap-2 mt-3 py-2.5 px-3 rounded-lg bg-neutral-50 dark:bg-neutral-950/60 border border-neutral-100 dark:border-neutral-800/60 font-mono text-center">
           <div>
             <span className="text-[9px] uppercase tracking-wider text-neutral-400 dark:text-neutral-500 block font-bold">
@@ -121,10 +121,10 @@ function TopicCardItem({ topic }) {
           </div>
           <div>
             <span className="text-[9px] uppercase tracking-wider text-neutral-400 dark:text-neutral-500 block font-bold">
-              Attempts
+              Failure Rate
             </span>
-            <span className="text-xs font-black text-neutral-900 dark:text-neutral-200">
-              {topic.totalAttempts}
+            <span className={`text-xs font-black ${isWeak ? 'text-rose-600 dark:text-rose-400' : 'text-neutral-900 dark:text-neutral-200'}`}>
+              {topic.failureRate}%
             </span>
           </div>
           <div>
@@ -227,6 +227,7 @@ export default function TopicDirectory({ topics = [] }) {
         if (sortBy === 'highest') return b.masteryScore - a.masteryScore
         if (sortBy === 'solved') return b.volume - a.volume
         if (sortBy === 'accuracy') return b.accuracy - a.accuracy
+        if (sortBy === 'failure') return b.failureRate - a.failureRate
         if (sortBy === 'alpha') return a.name.localeCompare(b.name)
         return 0
       })
@@ -239,9 +240,9 @@ export default function TopicDirectory({ topics = [] }) {
         title: 'Weak Topics',
         icon: '🔴',
         count: counts.weak,
-        rule: 'Solved < 5 OR Acceptance Rate < 40%',
+        rule: 'Volume < 5 OR Mastery < 40 OR Failure > 50%',
         badgeClass: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20',
-        note: 'High-priority triage. Topics with inadequate practice volume or low acceptance rate.'
+        note: 'High-priority triage. Critical gaps with inadequate solve volume, high failure rate, or low mastery.'
       }
     }
     if (activeTierFilter === 'medium') {
@@ -249,18 +250,18 @@ export default function TopicDirectory({ topics = [] }) {
         title: 'Developing Topics',
         icon: '🟡',
         count: counts.medium,
-        rule: 'Solved ≥ 5 AND 40% ≤ Acceptance Rate < 70%',
+        rule: 'Volume ≥ 5 AND 40 ≤ Mastery < 70',
         badgeClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
-        note: 'Active progression. Concepts are understood; target drills to elevate accuracy.'
+        note: 'Active progression. Solid foundations in place; target drills to elevate accuracy and reduce failure rate.'
       }
     }
     return {
       title: 'Proficient Topics',
       icon: '🟢',
       count: counts.strong,
-      rule: 'Solved ≥ 5 AND Acceptance Rate ≥ 70%',
+      rule: 'Volume ≥ 15 AND Mastery ≥ 70',
       badgeClass: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
-      note: 'Demonstrated mastery. High first-attempt consistency and algorithmic fluency.'
+      note: 'Demonstrated mastery. High first-attempt consistency, low failure rate, and algorithmic fluency.'
     }
   }, [activeTierFilter, counts])
 
@@ -371,6 +372,7 @@ export default function TopicDirectory({ topics = [] }) {
             >
               <option value="weakest">Weakest First</option>
               <option value="highest">Highest Mastery</option>
+              <option value="failure">Highest Failure Rate</option>
               <option value="solved">Most Solved</option>
               <option value="accuracy">Highest Accuracy</option>
               <option value="alpha">A - Z</option>
