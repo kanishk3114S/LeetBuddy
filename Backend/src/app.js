@@ -24,10 +24,11 @@ app.use(cookieParser())
 app.use(express.json()) //converts the json file to req.body so that the backend system also get access//
 app.use(morgan('dev'))
 
-// ── Lightweight Health Check Route (Zero-overhead keep-alive for Render / cron-job.org) ──
-// Placed before authentication middleware so it uses zero DB/AI resources and sends 2 bytes
-app.all(["/api/health", "/health"], (req, res) => {
-  res.status(200).send("OK");
+// ── Zero-Overhead Keep-Alive & Health Check Routes (Render / cron-job.org / Keep-Alive) ──
+// Matches root '/', '/health', and '/api/health' for GET, HEAD, POST, OPTIONS
+// Bypasses all auth/database middleware, responds in <1ms with 2 bytes plain text
+app.all(["/", "/health", "/api/health"], (req, res) => {
+  res.status(200).type("text/plain").send("OK");
 });
 
 // General verification middleware: runs before any request reaches the backend route handlers

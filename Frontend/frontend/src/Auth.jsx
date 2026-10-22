@@ -56,14 +56,19 @@ function Auth() {
         localStorage.setItem('lb_token', data.token)
         localStorage.setItem('lb_email', form.email.trim())
 
-        // Fetch user info from session
+        // Fetch user info, profile, and contest data concurrently for sub-second auth transition
         try {
-          const meRes = await fetch('/api/auth/me', {
-            headers: { Authorization: `Bearer ${data.token}` },
-            credentials: 'include'
-          })
-          if (meRes.ok) {
-            const meData = await meRes.json()
+          const authHeaders = { Authorization: `Bearer ${data.token}` }
+          const fetchOptions = { headers: authHeaders, credentials: 'include' }
+
+          const [meResResult, profileResResult, contestResResult] = await Promise.allSettled([
+            fetch('/api/auth/me', fetchOptions),
+            fetch('/api/leetcode/profile', fetchOptions),
+            fetch('/api/v1/contests/me', fetchOptions)
+          ])
+
+          if (meResResult.status === 'fulfilled' && meResResult.value.ok) {
+            const meData = await meResResult.value.json().catch(() => null)
             if (meData?.user?.username) {
               localStorage.setItem('lb_name', meData.user.username)
             }
@@ -72,13 +77,8 @@ function Auth() {
             }
           }
 
-          // Hydrate profile data from DB if user was previously verified
-          const profileRes = await fetch('/api/leetcode/profile', {
-            headers: { Authorization: `Bearer ${data.token}` },
-            credentials: 'include'
-          })
-          if (profileRes.ok) {
-            const profilePayload = await profileRes.json()
+          if (profileResResult.status === 'fulfilled' && profileResResult.value.ok) {
+            const profilePayload = await profileResResult.value.json().catch(() => null)
             if (profilePayload?.profile) {
               localStorage.setItem('lb_stats', JSON.stringify({
                 username: profilePayload.username || profilePayload.user?.leetcode?.username,
@@ -90,13 +90,8 @@ function Auth() {
             }
           }
 
-          // Hydrate contest data from DB if available
-          const contestRes = await fetch('/api/v1/contests/me', {
-            headers: { Authorization: `Bearer ${data.token}` },
-            credentials: 'include'
-          })
-          if (contestRes.ok) {
-            const contestPayload = await contestRes.json()
+          if (contestResResult.status === 'fulfilled' && contestResResult.value.ok) {
+            const contestPayload = await contestResResult.value.json().catch(() => null)
             if (contestPayload?.contest) {
               localStorage.setItem('lb_contest', JSON.stringify(contestPayload.contest))
             }

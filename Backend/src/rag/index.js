@@ -177,7 +177,7 @@ Topics with low solve volume relative to high contest frequency (such as Dynamic
     const biweeklyStats = calcStats(biweeklyContests);
     const circadianVariance = biweeklyStats.avgDelta - weeklyStats.avgDelta;
 
-    const contestSummaryContent = `
+const contestSummaryContent = `
 [CONTEST CAREER TELEMETRY & RATINGS]
 Username: ${cleanUsername}
 Current Rating: ${summary.rating || 1500}
